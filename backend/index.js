@@ -17,9 +17,16 @@ const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
 //middlewares
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
-app.use(urlencoded({ extended: true }));
+app.use(urlencoded({ extended: true, limit: '50mb' }));
+
+// Set request timeout to 10 minutes for video processing
+app.use((req, res, next) => {
+    req.setTimeout(10 * 60 * 1000); // 10 minutes
+    res.setTimeout(10 * 60 * 1000); // 10 minutes
+    next();
+});
 const corsOptions = {
     origin: [
         process.env.URL || "http://localhost:3000",

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog'
-import { Bookmark, MessageCircle, MoreHorizontal, Send } from 'lucide-react'
+import { Bookmark, MessageCircle, MoreHorizontal, Send, Play, Pause, Volume2, VolumeX } from 'lucide-react'
 import { Button } from './ui/button'
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import CommentDialog from './CommentDialog'
@@ -15,6 +15,8 @@ import { Badge } from './ui/badge'
 const Post = ({ post }) => {
     const [text, setText] = useState("");
     const [open, setOpen] = useState(false);
+    const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+    const [videoStates, setVideoStates] = useState({});
     const { user } = useSelector(store => store.auth);
     const { posts } = useSelector(store => store.post);
     const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
@@ -28,6 +30,42 @@ const Post = ({ post }) => {
             setText(inputText);
         } else {
             setText("");
+        }
+    }
+
+    const handleVideoPlay = (videoId) => {
+        setVideoStates(prev => ({
+            ...prev,
+            [videoId]: { ...prev[videoId], isPlaying: true }
+        }));
+    }
+
+    const handleVideoPause = (videoId) => {
+        setVideoStates(prev => ({
+            ...prev,
+            [videoId]: { ...prev[videoId], isPlaying: false }
+        }));
+    }
+
+    const handleVideoVolumeToggle = (videoId) => {
+        setVideoStates(prev => ({
+            ...prev,
+            [videoId]: { 
+                ...prev[videoId], 
+                isMuted: !prev[videoId]?.isMuted 
+            }
+        }));
+    }
+
+    const nextMedia = () => {
+        if (post.media && currentMediaIndex < post.media.length - 1) {
+            setCurrentMediaIndex(currentMediaIndex + 1);
+        }
+    }
+
+    const prevMedia = () => {
+        if (currentMediaIndex > 0) {
+            setCurrentMediaIndex(currentMediaIndex - 1);
         }
     }
 
@@ -108,6 +146,87 @@ const Post = ({ post }) => {
         }
     }
 
+    const renderMedia = () => {
+        if (!post.media || post.media.length === 0) {
+            return (
+                <div className="w-full h-64 bg-gray-100 flex items-center justify-center rounded-sm">
+                    <span className="text-gray-500">No media</span>
+                </div>
+            );
+        }
+
+        const currentMedia = post.media[currentMediaIndex];
+        
+        return (
+            <div className="relative">
+                {currentMedia.type === 'image' ? (
+                    <img
+                        className='rounded-sm my-2 w-full aspect-square object-cover'
+                        src={currentMedia.url}
+                        alt="post_media"
+                    />
+                ) : (
+                    <div className="relative">
+                        <video
+                            className='rounded-sm my-2 w-full aspect-square object-cover'
+                            src={currentMedia.url}
+                            poster={currentMedia.thumbnail}
+                            controls
+                            onPlay={() => handleVideoPlay(currentMedia._id)}
+                            onPause={() => handleVideoPause(currentMedia._id)}
+                            muted={videoStates[currentMedia._id]?.isMuted}
+                        />
+                        {currentMedia.duration && (
+                            <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                                {Math.floor(currentMedia.duration)}s
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Media Navigation */}
+                {post.media.length > 1 && (
+                    <>
+                        <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
+                            {currentMediaIndex + 1}/{post.media.length}
+                        </div>
+                        
+                        {currentMediaIndex > 0 && (
+                            <button
+                                onClick={prevMedia}
+                                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-70 text-white p-2 rounded-full hover:bg-opacity-80"
+                            >
+                                ‹
+                            </button>
+                        )}
+                        
+                        {currentMediaIndex < post.media.length - 1 && (
+                            <button
+                                onClick={nextMedia}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-70 text-white p-2 rounded-full hover:bg-opacity-80"
+                            >
+                                ›
+                            </button>
+                        )}
+
+                        {/* Media Dots */}
+                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1">
+                            {post.media.map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setCurrentMediaIndex(index)}
+                                    className={`w-2 h-2 rounded-full ${
+                                        index === currentMediaIndex ? 'bg-white' : 'bg-white bg-opacity-50'
+                                    }`}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className='my-8 w-full max-w-sm mx-auto'>
             <div className='flex items-center justify-between'>
@@ -137,11 +256,8 @@ const Post = ({ post }) => {
                     </DialogContent>
                 </Dialog>
             </div>
-            <img
-                className='rounded-sm my-2 w-full aspect-square object-cover'
-                src={post.image}
-                alt="post_img"
-            />
+
+            {renderMedia()}
 
             <div className='flex items-center justify-between my-2'>
                 <div className='flex items-center gap-3'>

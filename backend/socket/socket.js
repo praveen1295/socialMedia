@@ -6,6 +6,9 @@ const app = express();
 
 const server = http.createServer(app);
 
+// Set server timeout to 10 minutes for video processing
+server.timeout = 10 * 60 * 1000; // 10 minutes
+
 const io = new Server(server, {
     cors:{
         origin: [

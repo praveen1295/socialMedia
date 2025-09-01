@@ -24,5 +24,14 @@ export const config = {
             SEND: (receiverId) => `${API_BASE_URL}/api/v1/message/send/${receiverId}`,
             ALL: (userId) => `${API_BASE_URL}/api/v1/message/all/${userId}`,
         }
+    },
+    // Media configuration
+    MEDIA: {
+        MAX_FILES: 10,
+        MAX_FILE_SIZE: 100 * 1024 * 1024, // 100MB
+        MAX_CAPTION_LENGTH: 280,
+        SUPPORTED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+        SUPPORTED_VIDEO_TYPES: ['video/mp4', 'video/avi', 'video/mov', 'video/wmv', 'video/flv'],
+        MAX_VIDEO_DURATION: 60 // 1 minute in seconds
     }
 };
