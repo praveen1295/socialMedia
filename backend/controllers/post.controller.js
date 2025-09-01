@@ -326,26 +326,53 @@ export const addComment = async (req,res) =>{
     try {
         const postId = req.params.id;
         const commentKrneWalaUserKiId = req.id;
-
-        const {text} = req.body;
+        const { text, parentCommentId } = req.body;
 
         const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({message:'Post not found', success:false});
 
         if(!text) return res.status(400).json({message:'text is required', success:false});
 
         const comment = await Comment.create({
             text,
-            author:commentKrneWalaUserKiId,
-            post:postId
+            author: commentKrneWalaUserKiId,
+            post: postId,
+            parentComment: parentCommentId || null
         })
 
         await comment.populate({
             path:'author',
-            select:"username profilePicture"
+            select:"username profilePicture fullName"
         });
+
+        // If it's a reply, add to parent comment's replies
+        if (parentCommentId) {
+            const parentComment = await Comment.findById(parentCommentId);
+            if (parentComment) {
+                parentComment.replies.push(comment._id);
+                await parentComment.save();
+            }
+        } else {
+            // If it's a top-level comment, add to post
+            post.comments.push(comment._id);
+            await post.save();
+        }
+
+        // Real-time notification
+        const user = await User.findById(commentKrneWalaUserKiId).select('username profilePicture fullName');
+        const postOwnerId = post.author.toString();
         
-        post.comments.push(comment._id);
-        await post.save();
+        if(postOwnerId !== commentKrneWalaUserKiId){
+            const notification = {
+                type:'comment',
+                userId: commentKrneWalaUserKiId,
+                userDetails: user,
+                postId,
+                message:`${user.username} commented on your post`
+            }
+            const postOwnerSocketId = getReceiverSocketId(postOwnerId);
+            io.to(postOwnerSocketId).emit('notification', notification);
+        }
 
         return res.status(201).json({
             message:'Comment Added',
@@ -355,13 +382,26 @@ export const addComment = async (req,res) =>{
 
     } catch (error) {
         console.log(error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            success: false
+        });
     }
 };
 export const getCommentsOfPost = async (req,res) => {
     try {
         const postId = req.params.id;
 
-        const comments = await Comment.find({post:postId}).populate('author', 'username profilePicture');
+        const comments = await Comment.find({post:postId, parentComment: null})
+            .populate('author', 'username profilePicture fullName')
+            .populate({
+                path: 'replies',
+                populate: {
+                    path: 'author',
+                    select: 'username profilePicture fullName'
+                }
+            })
+            .sort({ createdAt: -1 });
 
         if(!comments) return res.status(404).json({message:'No comments found for this post', success:false});
 
@@ -369,6 +409,97 @@ export const getCommentsOfPost = async (req,res) => {
 
     } catch (error) {
         console.log(error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            success: false
+        });
+    }
+}
+
+export const editComment = async (req, res) => {
+    try {
+        const commentId = req.params.id;
+        const userId = req.id;
+        const { text } = req.body;
+
+        if (!text) return res.status(400).json({message:'text is required', success:false});
+
+        const comment = await Comment.findById(commentId);
+        if (!comment) return res.status(404).json({message:'Comment not found', success:false});
+
+        // Check if user is the author of the comment
+        if (comment.author.toString() !== userId.toString()) {
+            return res.status(403).json({message:'Unauthorized to edit this comment', success:false});
+        }
+
+        comment.text = text;
+        comment.isEdited = true;
+        comment.editedAt = new Date();
+        await comment.save();
+
+        await comment.populate('author', 'username profilePicture fullName');
+
+        return res.status(200).json({
+            message:'Comment updated successfully',
+            comment,
+            success:true
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            success: false
+        });
+    }
+}
+
+export const deleteComment = async (req, res) => {
+    try {
+        const commentId = req.params.id;
+        const userId = req.id;
+
+        const comment = await Comment.findById(commentId);
+        if (!comment) return res.status(404).json({message:'Comment not found', success:false});
+
+        // Check if user is the author of the comment
+        if (comment.author.toString() !== userId.toString()) {
+            return res.status(403).json({message:'Unauthorized to delete this comment', success:false});
+        }
+
+        // If it's a top-level comment, remove from post
+        if (!comment.parentComment) {
+            const post = await Post.findById(comment.post);
+            if (post) {
+                post.comments = post.comments.filter(id => id.toString() !== commentId);
+                await post.save();
+            }
+        } else {
+            // If it's a reply, remove from parent comment
+            const parentComment = await Comment.findById(comment.parentComment);
+            if (parentComment) {
+                parentComment.replies = parentComment.replies.filter(id => id.toString() !== commentId);
+                await parentComment.save();
+            }
+        }
+
+        // Delete all replies first
+        await Comment.deleteMany({ parentComment: commentId });
+        
+        // Delete the comment
+        await Comment.findByIdAndDelete(commentId);
+
+        return res.status(200).json({
+            message:'Comment deleted successfully',
+            success:true
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            success: false
+        });
     }
 }
 export const deletePost = async (req,res) => {

@@ -337,18 +337,54 @@ export const editProfile = async (req, res) => {
 };
 export const getSuggestedUsers = async (req, res) => {
     try {
-        const suggestedUsers = await User.find({ _id: { $ne: req.id } }).select("-password");
-        if (!suggestedUsers) {
-            return res.status(400).json({
-                message: 'Currently do not have any users',
+        const currentUserId = req.id;
+
+        // Get current user's following list
+        const currentUser = await User.findById(currentUserId).select('following');
+        const followingIds = currentUser.following.map(id => id.toString());
+
+        // Get users that the current user is not following and not the current user
+        const suggestedUsers = await User.find({
+            _id: { $ne: currentUserId, $nin: followingIds }
+        })
+        .select('username fullName profilePicture followersCount followingCount')
+        .limit(10)
+        .sort({ followersCount: -1 });
+
+        // Add mutual connections count for each suggested user
+        const suggestionsWithMutual = await Promise.all(
+            suggestedUsers.map(async (user) => {
+                const mutualConnections = await User.countDocuments({
+                    _id: { $in: followingIds },
+                    following: user._id
+                });
+                
+                return {
+                    ...user.toObject(),
+                    mutualConnections
+                };
             })
-        };
+        );
+
+        // Sort by mutual connections first, then by followers count
+        suggestionsWithMutual.sort((a, b) => {
+            if (b.mutualConnections !== a.mutualConnections) {
+                return b.mutualConnections - a.mutualConnections;
+            }
+            return b.followersCount - a.followersCount;
+        });
+
         return res.status(200).json({
             success: true,
-            users: suggestedUsers
+            suggestedUsers: suggestionsWithMutual
         })
+
     } catch (error) {
         console.log(error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            success: false
+        });
     }
 };
 export const followOrUnfollow = async (req, res) => {
@@ -390,5 +426,67 @@ export const followOrUnfollow = async (req, res) => {
         }
     } catch (error) {
         console.log(error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            success: false
+        });
+    }
+}
+
+export const getFollowers = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = await User.findById(userId)
+            .populate('followers', 'username fullName profilePicture followersCount followingCount')
+            .select('followers');
+
+        if (!user) {
+            return res.status(404).json({
+                message: 'User not found',
+                success: false
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            followers: user.followers,
+            followersCount: user.followers.length
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            success: false
+        });
+    }
+}
+
+export const getFollowing = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const user = await User.findById(userId)
+            .populate('following', 'username fullName profilePicture followersCount followingCount')
+            .select('following');
+
+        if (!user) {
+            return res.status(404).json({
+                message: 'User not found',
+                success: false
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            following: user.following,
+            followingCount: user.following.length
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            success: false
+        });
     }
 }

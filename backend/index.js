@@ -7,6 +7,10 @@ import userRoute from "./routes/user.route.js";
 import postRoute from "./routes/post.route.js";
 import messageRoute from "./routes/message.route.js";
 import adminRoute from "./routes/admin.route.js";
+import employeeRoute from "./routes/employee.route.js";
+import revenueSharingRoute from "./routes/revenueSharing.route.js";
+import adminPostRoute from "./routes/adminPost.route.js";
+import accountDashboardRoute from "./routes/accountDashboard.route.js";
 import { app, server } from "./socket/socket.js";
 import path from "path";
  
@@ -70,6 +74,10 @@ app.use("/api/v1/user", userRoute);
 app.use("/api/v1/post", postRoute);
 app.use("/api/v1/message", messageRoute);
 app.use("/api/v1/admin", adminRoute);
+app.use("/api/v1/employee", employeeRoute);
+app.use("/api/v1/revenue-sharing", revenueSharingRoute);
+app.use("/api/v1/admin-posts", adminPostRoute);
+app.use("/api/v1/account-dashboard", accountDashboardRoute);
 
 
 app.use(express.static(path.join(__dirname, "/frontend/dist")));
