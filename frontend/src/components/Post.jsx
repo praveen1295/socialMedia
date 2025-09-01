@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Dialog, DialogContent, DialogTrigger } from './ui/dialog'
-import { Bookmark, MessageCircle, MoreHorizontal, Send, Play, Pause, Volume2, VolumeX } from 'lucide-react'
+import { Bookmark, MessageCircle, MoreHorizontal, Send, Play, Pause, Volume2, VolumeX, Eye, Users, Heart } from 'lucide-react'
 import { Button } from './ui/button'
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import CommentDialog from './CommentDialog'
@@ -15,14 +15,60 @@ import { Badge } from './ui/badge'
 const Post = ({ post }) => {
     const [text, setText] = useState("");
     const [open, setOpen] = useState(false);
+    const { user } = useSelector(store => store.auth);
     const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
     const [videoStates, setVideoStates] = useState({});
-    const { user } = useSelector(store => store.auth);
-    const { posts } = useSelector(store => store.post);
     const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
     const [postLike, setPostLike] = useState(post.likes.length);
     const [comment, setComment] = useState(post.comments);
+    const [viewCount, setViewCount] = useState(post.viewCount || 0);
+    const [showLikesList, setShowLikesList] = useState(false);
+    const [showViewsList, setShowViewsList] = useState(false);
+    const [likesList, setLikesList] = useState([]);
+    const [viewsList, setViewsList] = useState([]);
+    const [isViewTracked, setIsViewTracked] = useState(false);
+    
+    const { posts } = useSelector(store => store.post);
     const dispatch = useDispatch();
+    const postRef = useRef(null);
+
+    // View tracking with intersection observer
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting && entry.intersectionRatio >= 0.7 && !isViewTracked) {
+                        trackView();
+                    }
+                });
+            },
+            { threshold: 0.7 }
+        );
+
+        if (postRef.current) {
+            observer.observe(postRef.current);
+        }
+
+        return () => {
+            if (postRef.current) {
+                observer.unobserve(postRef.current);
+            }
+        };
+    }, [isViewTracked]);
+
+    const trackView = async () => {
+        try {
+            const res = await axios.post(config.API_ENDPOINTS.POST.VIEW(post._id), {}, {
+                withCredentials: true
+            });
+            if (res.data.success) {
+                setViewCount(res.data.viewCount);
+                setIsViewTracked(true);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     const changeEventHandler = (e) => {
         const inputText = e.target.value;
@@ -71,23 +117,63 @@ const Post = ({ post }) => {
 
     const likeOrDislikeHandler = async () => {
         try {
-            const action = liked ? 'dislike' : 'like';
-            const res = await axios.get(config.API_ENDPOINTS.POST.LIKE(post?._id, action), { withCredentials: true });
-            console.log(res.data);
-            if (res.data.success) {
-                const updatedLikes = liked ? postLike - 1 : postLike + 1;
-                setPostLike(updatedLikes);
-                setLiked(!liked);
+            if (liked) {
+                // Unlike
+                const res = await axios.get(config.API_ENDPOINTS.POST.DISLIKE(post?._id), { withCredentials: true });
+                if (res.data.success) {
+                    setPostLike(postLike - 1);
+                    setLiked(false);
+                    const updatedPostData = posts.map(p =>
+                        p?._id === post?._id ? {
+                            ...p,
+                            likes: p.likes.filter(id => id !== user?._id)
+                        } : p
+                    );
+                    dispatch(setPosts(updatedPostData));
+                    toast.success(res.data.message);
+                }
+            } else {
+                // Like
+                const res = await axios.get(config.API_ENDPOINTS.POST.LIKE(post?._id), { withCredentials: true });
+                if (res.data.success) {
+                    setPostLike(postLike + 1);
+                    setLiked(true);
+                    const updatedPostData = posts.map(p =>
+                        p?._id === post?._id ? {
+                            ...p,
+                            likes: [...p.likes, user?._id]
+                        } : p
+                    );
+                    dispatch(setPosts(updatedPostData));
+                    toast.success(res.data.message);
+                }
+            }
+        } catch (error) {
+            console.log(error);
+            if (error.response?.data?.message) {
+                toast.error(error.response.data.message);
+            }
+        }
+    }
 
-                // apne post ko update krunga
-                const updatedPostData = posts.map(p =>
-                    p?._id === post?._id ? {
-                        ...p,
-                        likes: liked ? p.likes.filter(id => id !== user?._id) : [...p.likes, user?._id]
-                    } : p
-                );
-                dispatch(setPosts(updatedPostData));
-                toast.success(res.data.message);
+    const getLikesList = async () => {
+        try {
+            const res = await axios.get(config.API_ENDPOINTS.POST.LIKES(post._id), { withCredentials: true });
+            if (res.data.success) {
+                setLikesList(res.data.likes);
+                setShowLikesList(true);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    const getViewsList = async () => {
+        try {
+            const res = await axios.get(config.API_ENDPOINTS.POST.VIEWS(post._id), { withCredentials: true });
+            if (res.data.success) {
+                setViewsList(res.data.views);
+                setShowViewsList(true);
             }
         } catch (error) {
             console.log(error);
@@ -228,7 +314,7 @@ const Post = ({ post }) => {
     };
 
     return (
-        <div className='my-8 w-full max-w-sm mx-auto'>
+        <div ref={postRef} className='my-8 w-full max-w-sm mx-auto'>
             <div className='flex items-center justify-between'>
                 <div className='flex items-center gap-2'>
                     <Avatar>
@@ -273,7 +359,22 @@ const Post = ({ post }) => {
                 </div>
                 <Bookmark onClick={bookmarkHandler} className='cursor-pointer hover:text-gray-600' />
             </div>
-            <span className='font-medium block mb-2'>{postLike} likes</span>
+            <div className='flex items-center gap-4 mb-2'>
+                <span 
+                    onClick={getLikesList}
+                    className='font-medium cursor-pointer hover:text-gray-600 flex items-center gap-1'
+                >
+                    <Heart size={16} />
+                    {postLike} likes
+                </span>
+                <span 
+                    onClick={getViewsList}
+                    className='font-medium cursor-pointer hover:text-gray-600 flex items-center gap-1'
+                >
+                    <Eye size={16} />
+                    {viewCount} views
+                </span>
+            </div>
             <p>
                 <span className='font-medium mr-2'>{post.author?.username}</span>
                 {post.caption}
@@ -300,6 +401,59 @@ const Post = ({ post }) => {
                 }
 
             </div>
+
+            {/* Likes List Dialog */}
+            <Dialog open={showLikesList} onOpenChange={setShowLikesList}>
+                <DialogContent className="max-w-md">
+                    <h3 className="text-lg font-semibold mb-4">Likes</h3>
+                    <div className="max-h-60 overflow-y-auto">
+                        {likesList.length > 0 ? (
+                            likesList.map((likeUser) => (
+                                <div key={likeUser._id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded">
+                                    <Avatar className="w-8 h-8">
+                                        <AvatarImage src={likeUser.profilePicture} />
+                                        <AvatarFallback>{likeUser.username[0]}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <p className="font-medium text-sm">{likeUser.username}</p>
+                                        <p className="text-xs text-gray-500">{likeUser.fullName}</p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-gray-500 text-center py-4">No likes yet</p>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Views List Dialog */}
+            <Dialog open={showViewsList} onOpenChange={setShowViewsList}>
+                <DialogContent className="max-w-md">
+                    <h3 className="text-lg font-semibold mb-4">Views</h3>
+                    <div className="max-h-60 overflow-y-auto">
+                        {viewsList.length > 0 ? (
+                            viewsList.map((view) => (
+                                <div key={view._id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded">
+                                    <Avatar className="w-8 h-8">
+                                        <AvatarImage src={view.user?.profilePicture} />
+                                        <AvatarFallback>{view.user?.username[0]}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1">
+                                        <p className="font-medium text-sm">{view.user?.username}</p>
+                                        <p className="text-xs text-gray-500">{view.user?.fullName}</p>
+                                    </div>
+                                    <span className="text-xs text-gray-400">
+                                        {new Date(view.viewedAt).toLocaleDateString()}
+                                    </span>
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-gray-500 text-center py-4">No views yet</p>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
