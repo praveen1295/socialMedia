@@ -244,12 +244,22 @@ export const likePost = async (req, res) => {
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ message: 'Post not found', success: false });
 
-        // like logic started
-        await post.updateOne({ $addToSet: { likes: likeKrneWalaUserKiId } });
+        // Check if user has already liked this post
+        const hasLiked = post.likes.includes(likeKrneWalaUserKiId);
+        
+        if (hasLiked) {
+            return res.status(400).json({ 
+                message: 'You have already liked this post', 
+                success: false 
+            });
+        }
+
+        // Add like
+        post.likes.push(likeKrneWalaUserKiId);
         await post.save();
 
         // implement socket io for real time notification
-        const user = await User.findById(likeKrneWalaUserKiId).select('username profilePicture');
+        const user = await User.findById(likeKrneWalaUserKiId).select('username profilePicture fullName');
          
         const postOwnerId = post.author.toString();
         if(postOwnerId !== likeKrneWalaUserKiId){
@@ -259,15 +269,23 @@ export const likePost = async (req, res) => {
                 userId:likeKrneWalaUserKiId,
                 userDetails:user,
                 postId,
-                message:'Your post was liked'
+                message:`${user.username} liked your post`
             }
             const postOwnerSocketId = getReceiverSocketId(postOwnerId);
             io.to(postOwnerSocketId).emit('notification', notification);
         }
 
-        return res.status(200).json({message:'Post liked', success:true});
+        return res.status(200).json({
+            message:'Post liked', 
+            success:true,
+            likeCount: post.likes.length
+        });
     } catch (error) {
-
+        console.log(error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            success: false
+        });
     }
 }
 export const dislikePost = async (req, res) => {
@@ -435,6 +453,102 @@ export const getVideoProcessingStatus = async (req, res) => {
             isProcessing: processingVideos.length > 0,
             hasFailures: failedVideos.length > 0,
             media: post.media
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            success: false
+        });
+    }
+}
+
+export const trackPostView = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const userId = req.id; // From authentication middleware
+
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found', success: false });
+        }
+
+        // Check if user has already viewed this post
+        const existingView = post.views.find(view => 
+            view.user && view.user.toString() === userId.toString()
+        );
+
+        if (!existingView) {
+            // Add new view
+            post.views.push({
+                user: userId,
+                viewedAt: new Date()
+            });
+            post.viewCount = post.views.length;
+            await post.save();
+
+            return res.status(200).json({
+                message: 'View tracked successfully',
+                viewCount: post.viewCount,
+                success: true
+            });
+        } else {
+            return res.status(200).json({
+                message: 'View already tracked',
+                viewCount: post.viewCount,
+                success: true
+            });
+        }
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            success: false
+        });
+    }
+}
+
+export const getPostViews = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const post = await Post.findById(postId)
+            .populate('views.user', 'username profilePicture fullName');
+
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found', success: false });
+        }
+
+        return res.status(200).json({
+            success: true,
+            viewCount: post.viewCount,
+            views: post.views
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: 'Internal server error',
+            success: false
+        });
+    }
+}
+
+export const getPostLikes = async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const post = await Post.findById(postId)
+            .populate('likes', 'username profilePicture fullName');
+
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found', success: false });
+        }
+
+        return res.status(200).json({
+            success: true,
+            likeCount: post.likes.length,
+            likes: post.likes
         });
 
     } catch (error) {

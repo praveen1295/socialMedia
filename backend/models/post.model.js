@@ -38,7 +38,54 @@ const postSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'Comment'
     }],
+    views: [{
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        viewedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    viewCount: {
+        type: Number,
+        default: 0
+    },
     mediaCount: {
+        type: Number,
+        default: 0
+    },
+    // Admin approval and pricing fields
+    isApproved: {
+        type: Boolean,
+        default: false
+    },
+    approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Admin'
+    },
+    approvedAt: {
+        type: Date
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['pending', 'paid'],
+        default: 'pending'
+    },
+    paidAt: {
+        type: Date
+    },
+    // Pricing calculations
+    viewPrice: {
+        type: Number,
+        default: 0
+    },
+    likePrice: {
+        type: Number,
+        default: 0
+    },
+    totalPrice: {
         type: Number,
         default: 0
     }

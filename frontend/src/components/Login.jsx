@@ -11,7 +11,7 @@ import { config } from '../config/config';
 
 const Login = () => {
     const [input, setInput] = useState({
-        email: "",
+        emailOrUsername: "",
         password: ""
     });
     const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ const Login = () => {
                 navigate("/");
                 toast.success(res.data.message);
                 setInput({
-                    email: "",
+                    emailOrUsername: "",
                     password: ""
                 });
             }
@@ -56,44 +56,50 @@ const Login = () => {
         }
     },[])
     return (
-        <div className='flex items-center w-screen h-screen justify-center'>
-            <form onSubmit={signupHandler} className='shadow-lg flex flex-col gap-5 p-8'>
-                <div className='my-4'>
-                    <h1 className='text-center font-bold text-xl'>LOGO</h1>
-                    <p className='text-sm text-center'>Login to see photos & videos from your friends</p>
+        <div className='flex items-center w-screen h-screen justify-center bg-gray-50'>
+            <form onSubmit={signupHandler} className='shadow-lg flex flex-col gap-5 p-8 bg-white rounded-lg w-full max-w-md'>
+                <div className='my-4 text-center'>
+                    <h1 className='text-center font-bold text-2xl text-gray-800'>SocialMedia</h1>
+                    <p className='text-sm text-center text-gray-600 mt-2'>Welcome back! Please sign in to your account</p>
                 </div>
                 <div>
-                    <span className='font-medium'>Email</span>
+                    <span className='font-medium text-gray-700'>Email or Username</span>
                     <Input
-                        type="email"
-                        name="email"
-                        value={input.email}
+                        type="text"
+                        name="emailOrUsername"
+                        value={input.emailOrUsername}
                         onChange={changeEventHandler}
+                        placeholder="Enter your email or username"
                         className="focus-visible:ring-transparent my-2"
+                        required
                     />
                 </div>
                 <div>
-                    <span className='font-medium'>Password</span>
+                    <span className='font-medium text-gray-700'>Password</span>
                     <Input
                         type="password"
                         name="password"
                         value={input.password}
                         onChange={changeEventHandler}
+                        placeholder="Enter your password"
                         className="focus-visible:ring-transparent my-2"
+                        required
                     />
                 </div>
                 {
                     loading ? (
-                        <Button>
+                        <Button disabled className='mt-4'>
                             <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                            Please wait
+                            Signing in...
                         </Button>
                     ) : (
-                        <Button type='submit'>Login</Button>
+                        <Button type='submit' className='mt-4'>Sign In</Button>
                     )
                 }
 
-                <span className='text-center'>Dosent have an account? <Link to="/signup" className='text-blue-600'>Signup</Link></span>
+                <span className='text-center text-sm text-gray-600'>
+                    Don't have an account? <Link to="/signup" className='text-blue-600 hover:text-blue-700 font-medium'>Sign up</Link>
+                </span>
             </form>
         </div>
     )
