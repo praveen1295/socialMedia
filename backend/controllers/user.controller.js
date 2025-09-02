@@ -1,4 +1,6 @@
 import { User } from "../models/user.model.js";
+import { Admin } from "../models/admin.model.js";
+
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import getDataUri from "../utils/datauri.js";
@@ -94,7 +96,7 @@ export const register = async (req, res) => {
 };
 export const login = async (req, res) => {
   try {
-    const { emailOrUsername, password } = req.body;
+    const { emailOrUsername, password, role } = req.body;
 
     if (!emailOrUsername || !password) {
       return res.status(400).json({
@@ -102,29 +104,53 @@ export const login = async (req, res) => {
         success: false,
       });
     }
+    let user, admin;
+    if (role === "admin") {
+      user = await Admin.findOne({
+        $or: [
+          { email: emailOrUsername.toLowerCase() },
+          { username: emailOrUsername.toLowerCase() },
+        ],
+      });
 
+      if (!admin) {
+        return res.status(401).json({
+          message: "Invalid credentials",
+          success: false,
+        });
+      }
+
+      // Check if user is active
+      if (!admin.isActive) {
+        return res.status(401).json({
+          message: "Account is deactivated",
+          success: false,
+        });
+      }
+    } else {
+      user = await User.findOne({
+        $or: [
+          { email: emailOrUsername.toLowerCase() },
+          { username: emailOrUsername.toLowerCase() },
+        ],
+      });
+
+      if (!user) {
+        return res.status(401).json({
+          message: "Invalid credentials",
+          success: false,
+        });
+      }
+
+      // Check if user is active
+      if (!user.isActive) {
+        return res.status(401).json({
+          message: "Account is deactivated",
+          success: false,
+        });
+      }
+    }
     // Find user by email or username
-    let user = await User.findOne({
-      $or: [
-        { email: emailOrUsername.toLowerCase() },
-        { username: emailOrUsername.toLowerCase() },
-      ],
-    });
-
-    if (!user) {
-      return res.status(401).json({
-        message: "Invalid credentials",
-        success: false,
-      });
-    }
-
-    // Check if user is active
-    if (!user.isActive) {
-      return res.status(401).json({
-        message: "Account is deactivated",
-        success: false,
-      });
-    }
 
     const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (!isPasswordMatch) {
