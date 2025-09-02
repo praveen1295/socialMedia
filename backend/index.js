@@ -6,6 +6,11 @@ import connectDB from "./utils/db.js";
 import userRoute from "./routes/user.route.js";
 import postRoute from "./routes/post.route.js";
 import messageRoute from "./routes/message.route.js";
+import adminRoute from "./routes/admin.route.js";
+import employeeRoute from "./routes/employee.route.js";
+import revenueSharingRoute from "./routes/revenueSharing.route.js";
+import adminPostRoute from "./routes/adminPost.route.js";
+import accountDashboardRoute from "./routes/accountDashboard.route.js";
 import { app, server } from "./socket/socket.js";
 import path from "path";
  
@@ -17,9 +22,16 @@ const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
 //middlewares
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
-app.use(urlencoded({ extended: true }));
+app.use(urlencoded({ extended: true, limit: '50mb' }));
+
+// Set request timeout to 10 minutes for video processing
+app.use((req, res, next) => {
+    req.setTimeout(10 * 60 * 1000); // 10 minutes
+    res.setTimeout(10 * 60 * 1000); // 10 minutes
+    next();
+});
 const corsOptions = {
     origin: [
         process.env.URL || "http://localhost:3000",
@@ -61,6 +73,11 @@ app.get('/health', (req, res) => {
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/post", postRoute);
 app.use("/api/v1/message", messageRoute);
+app.use("/api/v1/admin", adminRoute);
+app.use("/api/v1/employee", employeeRoute);
+app.use("/api/v1/revenue-sharing", revenueSharingRoute);
+app.use("/api/v1/admin-posts", adminPostRoute);
+app.use("/api/v1/account-dashboard", accountDashboardRoute);
 
 
 app.use(express.static(path.join(__dirname, "/frontend/dist")));
