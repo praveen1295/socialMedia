@@ -9,13 +9,24 @@ import { Post } from "../models/post.model.js";
 
 export const register = async (req, res) => {
   try {
-    const { fullName, username, email, password, bio, gender } = req.body;
+    const { fullName, username, email, password, bio, gender, role } = req.body;
     const profilePicture = req.file;
 
     // Check if user already exists with email or username
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }],
-    });
+
+    let existingUser;
+    if (role === "admin") {
+      existingUser = await Admin.findOne({
+        $or: [{ email }, { username }],
+      });
+    } else {
+      existingUser = await User.findOne({
+        $or: [{ email }, { username }],
+      });
+    }
+    // existingUser = await User.findOne({
+    //   $or: [{ email }, { username }],
+    // });
 
     if (existingUser) {
       const field = existingUser.email === email ? "email" : "username";
@@ -37,15 +48,23 @@ export const register = async (req, res) => {
     }
 
     // Create user
-    const user = await User.create({
+
+    let user;
+    let userData = {
       fullName,
       username,
       email,
+      role,
       password: hashedPassword,
       bio: bio || "",
       gender: gender || "prefer-not-to-say",
       profilePicture: profilePictureUrl,
-    });
+    };
+    if (role === "admin") {
+      user = await Admin.create(userData);
+    } else {
+      user = await User.create(userData);
+    }
 
     // Remove password from response
     const userResponse = {
@@ -53,6 +72,7 @@ export const register = async (req, res) => {
       fullName: user.fullName,
       username: user.username,
       email: user.email,
+      role: user.role,
       profilePicture: user.profilePicture,
       bio: user.bio,
       gender: user.gender,
@@ -94,6 +114,7 @@ export const register = async (req, res) => {
     });
   }
 };
+
 export const login = async (req, res) => {
   try {
     const { emailOrUsername, password, role } = req.body;
@@ -104,7 +125,7 @@ export const login = async (req, res) => {
         success: false,
       });
     }
-    let user, admin;
+    let user;
     if (role === "admin") {
       user = await Admin.findOne({
         $or: [
@@ -112,21 +133,6 @@ export const login = async (req, res) => {
           { username: emailOrUsername.toLowerCase() },
         ],
       });
-
-      if (!admin) {
-        return res.status(401).json({
-          message: "Invalid credentials",
-          success: false,
-        });
-      }
-
-      // Check if user is active
-      if (!admin.isActive) {
-        return res.status(401).json({
-          message: "Account is deactivated",
-          success: false,
-        });
-      }
     } else {
       user = await User.findOne({
         $or: [
@@ -134,21 +140,21 @@ export const login = async (req, res) => {
           { username: emailOrUsername.toLowerCase() },
         ],
       });
+    }
+    console.log("useraaaa11111===================================>", user);
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid credentials",
+        success: false,
+      });
+    }
 
-      if (!user) {
-        return res.status(401).json({
-          message: "Invalid credentials",
-          success: false,
-        });
-      }
-
-      // Check if user is active
-      if (!user.isActive) {
-        return res.status(401).json({
-          message: "Account is deactivated",
-          success: false,
-        });
-      }
+    // Check if user is active
+    if (!user.isActive) {
+      return res.status(401).json({
+        message: "Account is deactivated",
+        success: false,
+      });
     }
     // Find user by email or username
 
@@ -171,38 +177,53 @@ export const login = async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    let userResponse;
     // Populate posts
-    const populatedPosts = await Promise.all(
-      user.posts.map(async (postId) => {
-        const post = await Post.findById(postId);
-        if (post && post.author.equals(user._id)) {
-          return post;
-        }
-        return null;
-      })
-    );
+    if (role === "admin") {
+      userResponse = {
+        _id: user._id,
+        fullName: user.fullName,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        profilePicture: user.profilePicture,
+        bio: user.bio,
+        gender: user.gender,
+        lastLogin: user.lastLogin,
+      };
+    } else {
+      const populatedPosts = await Promise.all(
+        user.posts.map(async (postId) => {
+          const post = await Post.findById(postId);
+          if (post && post.author.equals(user._id)) {
+            return post;
+          }
+          return null;
+        })
+      );
+      // Filter out null posts
+      const validPosts = populatedPosts.filter((post) => post !== null);
+      // Prepare user response
+      userResponse = {
+        _id: user._id,
+        fullName: user.fullName,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        profilePicture: user.profilePicture,
+        bio: user.bio,
+        gender: user.gender,
+        followers: user.followers,
+        following: user.following,
+        posts: validPosts,
+        followersCount: user.followersCount,
+        followingCount: user.followingCount,
+        postsCount: user.postsCount,
+        lastLogin: user.lastLogin,
+      };
+    }
 
-    // Filter out null posts
-    const validPosts = populatedPosts.filter((post) => post !== null);
-
-    // Prepare user response
-    const userResponse = {
-      _id: user._id,
-      fullName: user.fullName,
-      username: user.username,
-      email: user.email,
-      profilePicture: user.profilePicture,
-      bio: user.bio,
-      gender: user.gender,
-      followers: user.followers,
-      following: user.following,
-      posts: validPosts,
-      followersCount: user.followersCount,
-      followingCount: user.followingCount,
-      postsCount: user.postsCount,
-      lastLogin: user.lastLogin,
-    };
-
+    console.log("userResponse===", userResponse);
     return res
       .cookie("token", token, {
         httpOnly: true,
@@ -216,14 +237,16 @@ export const login = async (req, res) => {
         user: userResponse,
       });
   } catch (error) {
-    console.log(error);
+    console.log("error", error);
     return res.status(500).json({
       message: "Internal server error",
       success: false,
     });
   }
 };
+
 export const logout = async (_, res) => {
+  console.log("logout called");
   try {
     return res.cookie("token", "", { maxAge: 0 }).json({
       message: "Logged out successfully.",
@@ -267,6 +290,7 @@ export const getProfile = async (req, res) => {
       fullName: user.fullName,
       username: user.username,
       email: user.email,
+      role: user.role,
       profilePicture: user.profilePicture,
       bio: user.bio,
       gender: user.gender,
@@ -332,6 +356,7 @@ export const editProfile = async (req, res) => {
       fullName: user.fullName,
       username: user.username,
       email: user.email,
+      role: user.role,
       profilePicture: user.profilePicture,
       bio: user.bio,
       gender: user.gender,
@@ -371,7 +396,7 @@ export const getSuggestedUsers = async (req, res) => {
 
     // Get current user's following list
     const currentUser = await User.findById(currentUserId).select("following");
-    const followingIds = currentUser.following.map((id) => id.toString());
+    const followingIds = currentUser?.following.map((id) => id.toString());
 
     // Get users that the current user is not following and not the current user
     const suggestedUsers = await User.find({
