@@ -52,7 +52,7 @@ const Post = ({ post }) => {
 
   useEffect(() => {
     console.log("user, userProfile", user, userProfile);
-    const uerProfileIds = userProfile.followers?.map((f) => f._id);
+    const uerProfileIds = userProfile?.followers?.map((f) => f._id);
     console.log("uerProfileIds", uerProfileIds);
     if (userProfile && user && Array.isArray(uerProfileIds)) {
       setIsFollowing(uerProfileIds?.includes(user._id));

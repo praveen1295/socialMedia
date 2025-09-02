@@ -33,7 +33,7 @@ const Profile = () => {
 
   // check if current user follows this profile
   useEffect(() => {
-    const uerProfileIds = userProfile.followers?.map((f) => f._id);
+    const uerProfileIds = userProfile?.followers?.map((f) => f._id);
     if (userProfile && user && Array.isArray(uerProfileIds)) {
       setIsFollowing(uerProfileIds?.includes(user._id));
     }
