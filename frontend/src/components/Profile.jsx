@@ -33,8 +33,9 @@ const Profile = () => {
 
   // check if current user follows this profile
   useEffect(() => {
-    if (userProfile && user) {
-      setIsFollowing(userProfile.followers.includes(user._id));
+    const uerProfileIds = userProfile.followers?.map((f) => f._id);
+    if (userProfile && user && Array.isArray(uerProfileIds)) {
+      setIsFollowing(uerProfileIds?.includes(user._id));
     }
   }, [userProfile, user]);
 
@@ -77,7 +78,6 @@ const Profile = () => {
       toast.error(error.response.data.messsage);
     }
   };
-  console.log("displayedPost", displayedPost);
 
   return (
     <div className="flex max-w-5xl justify-center mx-auto pl-10">
@@ -151,13 +151,13 @@ const Profile = () => {
               <div className="flex items-center gap-4">
                 <p>
                   <span className="font-semibold">
-                    {userProfile?.posts.length}{" "}
+                    {userProfile?.posts?.length}{" "}
                   </span>
                   posts
                 </p>
                 <p>
                   <span className="font-semibold">
-                    {userProfile?.followers.length}{" "}
+                    {userProfile?.followers?.length}{" "}
                   </span>
                   followers
                 </p>
@@ -166,7 +166,7 @@ const Profile = () => {
                   onClick={() => setShowFollowingList(true)}
                 >
                   <span className="font-semibold">
-                    {userProfile?.following.length}{" "}
+                    {userProfile?.following?.length}{" "}
                   </span>
                   following
                 </p>
@@ -302,7 +302,6 @@ const Profile = () => {
 export default Profile;
 
 const RenderMedia = ({ post, deletePostHandler }) => {
-  console.log("ppppppppppppp", post);
   const [videoStates, setVideoStates] = useState({});
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 

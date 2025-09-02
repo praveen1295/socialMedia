@@ -9,20 +9,19 @@ import Messages from "./Messages";
 import axios from "axios";
 import { config } from "../config/config";
 import { setMessages } from "@/redux/chatSlice";
+import useGetUserFollowings from "@/hooks/useGetUserFollowings";
 
 const ChatPage = () => {
   const [textMessage, setTextMessage] = useState("");
   const { user, suggestedUsers, selectedUser } = useSelector(
     (store) => store.auth
   );
-  console.log(
-    "user, suggestedUsers, selectedUser",
-    user,
-    suggestedUsers,
-    selectedUser
-  );
+
+  const { userFollowings } = useSelector((store) => store.userFollowings);
+
+  console.log("userFollowings", userFollowings);
+  console.log("user", user, suggestedUsers, selectedUser);
   const { onlineUsers, messages } = useSelector((store) => store.chat);
-  console.log("onlineUsers, messages", onlineUsers, messages);
   const dispatch = useDispatch();
 
   const sendMessageHandler = async (receiverId) => {
@@ -46,32 +45,33 @@ const ChatPage = () => {
     }
   };
 
+  useGetUserFollowings(user?._id);
+
   useEffect(() => {
     return () => {
       dispatch(setSelectedUser(null));
     };
   }, []);
-
   return (
     <div className="flex ml-[16%] h-screen">
       <section className="w-full md:w-1/4 my-8">
         <h1 className="font-bold mb-4 px-3 text-xl">{user?.username}</h1>
         <hr className="mb-4 border-gray-300" />
         <div className="overflow-y-auto h-[80vh]">
-          {suggestedUsers?.map((suggestedUser) => {
-            const isOnline = onlineUsers.includes(suggestedUser?._id);
+          {userFollowings?.following?.map((following) => {
+            const isOnline = onlineUsers.includes(following?._id);
             return (
               <div
-                key={suggestedUser?._id}
-                onClick={() => dispatch(setSelectedUser(suggestedUser))}
+                key={following?._id}
+                onClick={() => dispatch(setSelectedUser(following))}
                 className="flex gap-3 items-center p-3 hover:bg-gray-50 cursor-pointer"
               >
                 <Avatar className="w-14 h-14">
-                  <AvatarImage src={suggestedUser?.profilePicture} />
+                  <AvatarImage src={following?.profilePicture} />
                   <AvatarFallback>CN</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                  <span className="font-medium">{suggestedUser?.username}</span>
+                  <span className="font-medium">{following?.username}</span>
                   <span
                     className={`text-xs font-bold ${
                       isOnline ? "text-green-600" : "text-red-600"

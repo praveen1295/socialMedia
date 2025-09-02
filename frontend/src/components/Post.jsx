@@ -24,11 +24,16 @@ import { toast } from "sonner";
 import { setPosts, setSelectedPost } from "@/redux/postSlice";
 import { Badge } from "./ui/badge";
 import RenderMedia from "./RenderMeadea";
+import useFollowOrUnfollow from "@/hooks/useFollowOrUnfollow";
+import useGetUserProfile from "@/hooks/useGetUserProfile";
 
 const Post = ({ post }) => {
+  const { followOrUnfollowUser, loading } = useFollowOrUnfollow();
+  const [isFollowing, setIsFollowing] = useState(false);
+
+  const { userProfile, user } = useSelector((store) => store.auth);
   const [text, setText] = useState("");
   const [open, setOpen] = useState(false);
-  const { user } = useSelector((store) => store.auth);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [videoStates, setVideoStates] = useState({});
   const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
@@ -44,6 +49,26 @@ const Post = ({ post }) => {
   const { posts } = useSelector((store) => store.post);
   const dispatch = useDispatch();
   const postRef = useRef(null);
+
+  useEffect(() => {
+    console.log("user, userProfile", user, userProfile);
+    const uerProfileIds = userProfile.followers?.map((f) => f._id);
+    console.log("uerProfileIds", uerProfileIds);
+    if (userProfile && user && Array.isArray(uerProfileIds)) {
+      setIsFollowing(uerProfileIds?.includes(user._id));
+    }
+  }, [userProfile, user]);
+
+  const handleFollowToggle = async (targetUserId) => {
+    console.log("handleFollowToggle", targetUserId);
+    const res = await followOrUnfollowUser(targetUserId);
+    if (res?.success) {
+      // if toggling main profile
+      if (targetUserId === userProfile._id) {
+        setIsFollowing((prev) => !prev);
+      }
+    }
+  };
 
   // View tracking with intersection observer
   useEffect(() => {
@@ -383,9 +408,18 @@ const Post = ({ post }) => {
             {post?.author?._id !== user?._id && (
               <Button
                 variant="ghost"
-                className="cursor-pointer w-fit text-[#ED4956] font-bold"
+                className={`h-8 ${
+                  isFollowing
+                    ? "bg-gray-300 hover:bg-gray-400"
+                    : "bg-[#0095F6] hover:bg-[#3192d2]"
+                }`}
+                onClick={() => handleFollowToggle(post?.author?._id)}
               >
-                Unfollow
+                {loading
+                  ? "Processing..."
+                  : isFollowing
+                  ? "Unfollow"
+                  : "Follow"}
               </Button>
             )}
 

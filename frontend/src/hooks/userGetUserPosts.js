@@ -14,7 +14,6 @@ const useGetUserPosts = () => {
           withCredentials: true,
         });
         if (res.data.success) {
-          console.log(res.data.posts);
           dispatch(setUserPosts(res.data.posts));
         }
       } catch (error) {

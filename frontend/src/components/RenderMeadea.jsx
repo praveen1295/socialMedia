@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 
 const RenderMedia = ({ post }) => {
-  console.log("ppppppppppppp", post);
   const [videoStates, setVideoStates] = useState({});
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
