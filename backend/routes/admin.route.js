@@ -1,26 +1,34 @@
 import express from "express";
-import { 
-    adminLogin, 
-    adminLogout, 
-    createDefaultAdmin, 
-    getAdminProfile 
+import {
+  adminLogin,
+  adminLogout,
+  createDefaultAdmin,
+  getAdminOrManagers,
+  getAdminProfile,
+  getAllUsers,
 } from "../controllers/admin.controller.js";
 import isAdminAuthenticated from "../middlewares/isAdminAuthenticated.js";
-import { 
-    validateAdminLogin, 
-    handleValidationErrors 
+import {
+  validateAdminLogin,
+  handleValidationErrors,
 } from "../middlewares/validation.js";
 
 const router = express.Router();
 
 // Create default admin (run once to set up admin)
-router.route('/create-default').post(createDefaultAdmin);
+router.route("/create-default").post(createDefaultAdmin);
 
 // Admin authentication routes
-router.route('/login').post(validateAdminLogin, handleValidationErrors, adminLogin);
-router.route('/logout').get(adminLogout);
+router
+  .route("/login")
+  .post(validateAdminLogin, handleValidationErrors, adminLogin);
+router.route("/logout").get(adminLogout);
 
 // Protected admin routes
-router.route('/profile').get(isAdminAuthenticated, getAdminProfile);
+router.route("/profile").get(isAdminAuthenticated, getAdminProfile);
+router.route("/getAllUsers").get(isAdminAuthenticated, getAllUsers);
+router
+  .route("/getAdminOrManagers")
+  .get(isAdminAuthenticated, getAdminOrManagers);
 
 export default router;

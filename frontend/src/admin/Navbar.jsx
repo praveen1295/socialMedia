@@ -5,7 +5,7 @@ import axios from "axios";
 import React, { useState } from "react";
 import { FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 export default function AdminNavbar() {
@@ -35,6 +35,7 @@ export default function AdminNavbar() {
   const navLinks = [
     { name: "Dashboard", path: "/admin/dashboard" },
     { name: "Users", path: "/admin/users" },
+    { name: "Admins/Managers", path: "/admin/admins-managers" },
     { name: "Posts", path: "/admin/posts" },
     { name: "Settings", path: "/admin/settings" },
   ];
@@ -48,13 +49,13 @@ export default function AdminNavbar() {
         {/* Desktop Menu */}
         <div className="hidden md:flex space-x-6 items-center">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.name}
-              href={link.path}
+              to={link.path}
               className="text-gray-700 hover:text-blue-600 font-medium transition"
             >
               {link.name}
-            </a>
+            </Link>
           ))}
 
           {/* Search Bar */}
@@ -75,12 +76,12 @@ export default function AdminNavbar() {
 
             {profileOpen && (
               <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-lg py-2">
-                <a
-                  href="/admin/profile"
+                <Link
+                  to="/admin/profile"
                   className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
                 >
                   Profile
-                </a>
+                </Link>
                 <button
                   className="block px-4 py-2 text-red-500 hover:bg-red-50"
                   onClick={() => {
@@ -107,21 +108,21 @@ export default function AdminNavbar() {
       {menuOpen && (
         <div className="md:hidden bg-white shadow-lg">
           {navLinks.map((link) => (
-            <a
+            <Link
               key={link.name}
-              href={link.path}
+              to={link.path}
               className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
               onClick={() => setMenuOpen(false)}
             >
               {link.name}
-            </a>
+            </Link>
           ))}
-          <a
-            href="/admin/profile"
+          <Link
+            to="/admin/profile"
             className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
           >
             Profile
-          </a>
+          </Link>
           <button
             onClick={() => {
               logoutHandler();

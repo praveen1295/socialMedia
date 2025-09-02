@@ -14,6 +14,9 @@ import { setOnlineUsers } from "./redux/chatSlice";
 import { setLikeNotification } from "./redux/rtnSlice";
 import ProtectedRoutes from "./components/ProtectedRoutes";
 import Admin from "./admin";
+import AdminUserList from "./admin/AdminUsers";
+import AdminManagerList from "./admin/AdminOrManagerList";
+import PageNotFound from "../src/components/ui/404";
 
 const browserRouter = createBrowserRouter([
   {
@@ -69,10 +72,30 @@ const browserRouter = createBrowserRouter([
   {
     path: "/admin",
     element: (
-      <ProtectedRoutes roles={["super-admin", "admin", "supervisor", "owner"]}>
+      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
         <Admin />
       </ProtectedRoutes>
     ),
+  },
+  {
+    path: "/admin/users",
+    element: (
+      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
+        <AdminUserList />
+      </ProtectedRoutes>
+    ),
+  },
+  {
+    path: "/admin/admins-managers",
+    element: (
+      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
+        <AdminManagerList />
+      </ProtectedRoutes>
+    ),
+  },
+  {
+    path: "*",
+    element: <PageNotFound></PageNotFound>,
   },
 ]);
 
