@@ -13,7 +13,9 @@ import { setMessages } from '@/redux/chatSlice';
 const ChatPage = () => {
     const [textMessage, setTextMessage] = useState("");
     const { user, suggestedUsers, selectedUser } = useSelector(store => store.auth);
+    console.log('user, suggestedUsers, selectedUser', user, suggestedUsers, selectedUser)
     const { onlineUsers, messages } = useSelector(store => store.chat);
+console.log('onlineUsers, messages', onlineUsers, messages)
     const dispatch = useDispatch();
 
     const sendMessageHandler = async (receiverId) => {
