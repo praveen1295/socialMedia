@@ -62,7 +62,7 @@ export const login = async (req, res) => {
 
         // populate each post if in the posts array
         const populatedPosts = await Promise.all(
-            user.posts.map( async (postId) => {
+            user.posts?.map( async (postId) => {
                 const post = await Post.findById(postId);
                 if(post.author.equals(user._id)){
                     return post;
