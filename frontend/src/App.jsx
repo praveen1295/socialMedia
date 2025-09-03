@@ -16,6 +16,9 @@ import ProtectedRoutes from "./components/ProtectedRoutes";
 import Admin from "./admin";
 import AdminUserList from "./admin/AdminUsers";
 import AdminManagerList from "./admin/AdminOrManagerList";
+import EmployeeList from "./admin/EmployeeList";
+import RevenueSharing from "./admin/RevenueSharing";
+import AccountDashboard from "./admin/AccountDashboard";
 import PageNotFound from "../src/components/ui/404";
 import AdminPostsList from "./admin/posts";
 import { toast } from "sonner";
@@ -89,6 +92,14 @@ const browserRouter = createBrowserRouter([
     ),
   },
   {
+    path: "/admin/employees",
+    element: (
+      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
+        <EmployeeList />
+      </ProtectedRoutes>
+    ),
+  },
+  {
     path: "/admin/admins-managers",
     element: (
       <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
@@ -101,6 +112,22 @@ const browserRouter = createBrowserRouter([
     element: (
       <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
         <AdminPostsList />
+      </ProtectedRoutes>
+    ),
+  },
+  {
+    path: "/admin/revenue",
+    element: (
+      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
+        <RevenueSharing />
+      </ProtectedRoutes>
+    ),
+  },
+  {
+    path: "/admin/account-dashboard",
+    element: (
+      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
+        <AccountDashboard />
       </ProtectedRoutes>
     ),
   },

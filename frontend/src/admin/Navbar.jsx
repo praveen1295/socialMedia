@@ -33,11 +33,10 @@ export default function AdminNavbar() {
   };
 
   const navLinks = [
-    { name: "Dashboard", path: "/admin/dashboard" },
-    { name: "Users", path: "/admin/users" },
-    { name: "Admins/Managers", path: "/admin/admins-managers" },
+    { name: "Employees", path: "/admin/employees" },
+    { name: "Revenue", path: "/admin/revenue" },
     { name: "Posts", path: "/admin/posts" },
-    { name: "Settings", path: "/admin/settings" },
+    { name: "Accounts", path: "/admin/account-dashboard" },
   ];
 
   return (
