@@ -1,50 +1,74 @@
 # Social Media Platform - Enhanced Post Features
 
 ## Overview
+
 This social media platform now supports enhanced post creation with multiple media types, including images and videos with advanced processing capabilities.
 
 ## New Post Features
 
 ### ✨ Enhanced Media Support
+
 - **Multiple Media Types**: Support for both images and videos in a single post
 - **Multiple File Upload**: Upload up to 10 media files per post
 - **Mixed Content**: Combine images and videos in the same post
 
 ### 📝 Text Content
+
 - **Character Limit**: Maximum 280 characters for captions
 - **Real-time Counter**: Live character count display
 - **Smart Validation**: Prevents exceeding character limits
 
 ### 🎥 Video Features
+
 - **Auto-Trim**: Videos automatically trimmed to 1 minute maximum
 - **Auto-Thumbnail**: Automatic thumbnail generation from video middle
 - **Multiple Formats**: Support for MP4, AVI, MOV, WMV, FLV
 - **Size Optimization**: Efficient video processing and compression
 
 ### 🖼️ Image Features
+
 - **Multiple Images**: Upload multiple images per post
 - **Auto-Optimization**: Automatic resizing and compression
 - **Format Support**: JPEG, PNG, GIF, WebP formats
 - **Quality Control**: Optimized for web viewing
 
 ### 🔧 Technical Features
+
 - **File Validation**: Type and size validation (100MB max per file)
 - **Progress Tracking**: Real-time upload and processing status
 - **Error Handling**: Comprehensive error messages and validation
 - **Responsive UI**: Mobile-friendly media grid and controls
 
+## 🗨️ User Chat Feature
+
+### Key Highlights
+
+- **Follower-Only Chat**: Users can **only chat if they follow each other**, ensuring privacy and meaningful conversations.
+- **Real-Time Messaging**: Built using **WebSockets** or **Socket.IO** for live updates.
+- **Message Status**:
+  - Seen/Delivered indicators
+  - Typing indicators for active chats
+- **Media Support in Chats**:
+  - Send text, emojis, images, and videos (with size restrictions)
+- **Notifications**:
+  - Push notifications for new messages
+  - Badge counters for unread messages
+
 ## Backend Architecture
 
 ### Models
+
 - **Post Schema**: Updated to support media arrays with type, URL, thumbnail, and duration
 - **Media Objects**: Structured media storage with metadata
 
 ### Controllers
+
 - **Enhanced Post Controller**: Handles multiple file types and processing
 - **Video Processing**: FFmpeg integration for video trimming and thumbnail generation
 - **Media Validation**: Comprehensive file type and size validation
 
 ### Middleware
+
 - **Multer Configuration**: Updated for multiple file handling
 - **File Filtering**: Smart file type detection and validation
 - **Size Limits**: Configurable file size and count limits
@@ -52,12 +76,14 @@ This social media platform now supports enhanced post creation with multiple med
 ## Frontend Components
 
 ### CreatePost Component
+
 - **Multi-File Upload**: Drag and drop or click to select multiple files
 - **Media Preview**: Grid layout showing all selected media
 - **Character Counter**: Real-time caption length tracking
 - **File Management**: Remove individual files before posting
 
 ### Post Component
+
 - **Media Display**: Responsive grid for multiple media items
 - **Video Controls**: Native video player with custom controls
 - **Navigation**: Swipe/click navigation between media items
@@ -66,6 +92,7 @@ This social media platform now supports enhanced post creation with multiple med
 ## API Endpoints
 
 ### POST `/api/v1/post/addpost`
+
 - **Method**: POST
 - **Authentication**: Required
 - **Content-Type**: `multipart/form-data`
@@ -74,6 +101,7 @@ This social media platform now supports enhanced post creation with multiple med
   - `media`: Array of files (max 10 files)
 
 ### Response Format
+
 ```json
 {
   "success": true,
@@ -104,12 +132,14 @@ This social media platform now supports enhanced post creation with multiple med
 ## Installation & Setup
 
 ### Prerequisites
+
 - Node.js 16+
 - FFmpeg (automatically installed via @ffmpeg-installer/ffmpeg)
 - MongoDB
 - Cloudinary account
 
 ### Backend Setup
+
 ```bash
 cd backend
 npm install
@@ -119,6 +149,7 @@ npm run dev
 ```
 
 ### Frontend Setup
+
 ```bash
 cd frontend
 npm install
@@ -128,6 +159,7 @@ npm run dev
 ## Environment Variables
 
 ### Backend (.env)
+
 ```env
 MONGODB_URI=your_mongodb_connection_string
 CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
@@ -137,6 +169,7 @@ JWT_SECRET=your_jwt_secret
 ```
 
 ## File Structure
+
 ```
 backend/
 ├── models/
@@ -161,6 +194,7 @@ frontend/
 ## Usage Examples
 
 ### Creating a Post with Multiple Media
+
 1. Click "Create Post" button
 2. Write caption (max 280 characters)
 3. Select multiple media files (images/videos)
@@ -168,6 +202,7 @@ frontend/
 5. Click "Post" to publish
 
 ### Video Processing
+
 - Videos are automatically trimmed to 1 minute
 - Thumbnails generated from video middle
 - Optimized for web streaming
@@ -176,12 +211,14 @@ frontend/
 ## Performance Considerations
 
 ### Backend
+
 - Temporary file cleanup after processing
 - Efficient video processing with FFmpeg
 - Cloudinary integration for media storage
 - MongoDB indexing for fast queries
 
 ### Frontend
+
 - Lazy loading of media content
 - Responsive image/video display
 - Efficient state management
@@ -190,12 +227,14 @@ frontend/
 ## Security Features
 
 ### File Validation
+
 - File type verification
 - Size limit enforcement
 - Malicious file detection
 - Secure file processing
 
 ### Authentication
+
 - JWT-based authentication
 - User authorization checks
 - Secure file upload endpoints
@@ -204,6 +243,7 @@ frontend/
 ## Future Enhancements
 
 ### Planned Features
+
 - **Live Streaming**: Real-time video broadcasting
 - **Story Mode**: Temporary post format
 - **Advanced Filters**: AI-powered content filtering
@@ -211,6 +251,7 @@ frontend/
 - **Collaboration**: Multi-user post creation
 
 ### Technical Improvements
+
 - **WebRTC**: Peer-to-peer video sharing
 - **Progressive Web App**: Offline functionality
 - **Microservices**: Scalable architecture
