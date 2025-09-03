@@ -1,31 +1,55 @@
 import React, { useEffect, useState } from "react";
-import { getAdminOrManagers } from "./adminService";
+import { getAdminOrManagers } from "./services/adminService";
 import AdminNavbar from "./Navbar";
+import Select from "react-select";
+import { Pagination } from "antd";
 
+const ITEMS_PER_PAGE = 10;
 const AdminManagerList = () => {
   const [admins, setAdmins] = useState([]);
   const [filteredAdmins, setFilteredAdmins] = useState([]);
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(ITEMS_PER_PAGE);
 
+  // Fetch admins/managers
   const fetchAdmins = async () => {
-    const response = await getAdminOrManagers();
+    const query = {
+      page,
+      limit: pageSize,
+      role: "all",
+    };
+    const response = await getAdminOrManagers(query);
     if (response?.success) {
       setAdmins(response.admins);
       setFilteredAdmins(response.admins);
     }
   };
 
-  const handleFilterChange = (e) => {
-    const value = e.target.value;
-    setFilter(value);
+  // Handle filter by role
+  const handleFilterChange = (selectedOptions) => {
+    setFilter(selectedOptions || []);
 
-    if (value === "all") {
+    if (!selectedOptions || selectedOptions.length === 0) {
       setFilteredAdmins(admins);
     } else {
-      const filtered = admins.filter((admin) => admin.role === value);
+      const roles = selectedOptions.map((opt) => opt.value);
+      const filtered = admins.filter((admin) => roles.includes(admin.role));
       setFilteredAdmins(filtered);
     }
+    setPage(1); // reset to first page
   };
+
+  // Pagination slice
+  const paginatedAdmins = filteredAdmins.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
+
+  const roleOptions = [
+    { value: "admin", label: "Admin" },
+    { value: "manager", label: "Manager" },
+  ];
 
   useEffect(() => {
     fetchAdmins();
@@ -35,52 +59,72 @@ const AdminManagerList = () => {
     <>
       <AdminNavbar />
 
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-semibold">Admin / Manager List</h2>
-          <select
+      <div className="p-6 font-sans">
+        {/* Header + Filters */}
+        <div className="flex space-x-4 p-4 bg-white shadow-md rounded mb-6">
+          <Select
+            isMulti
+            options={roleOptions}
             value={filter}
             onChange={handleFilterChange}
-            className="border p-2 rounded"
-          >
-            <option value="all">All</option>
-            <option value="admin">Admin</option>
-            <option value="manager">Manager</option>
-          </select>
+            placeholder="Filter by Role"
+            className="w-1/2"
+          />
         </div>
 
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100 text-left">
-              <th className="p-2">Full Name</th>
-              <th className="p-2">Email</th>
-              <th className="p-2">Role</th>
-              <th className="p-2">Last Login</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredAdmins.map((admin) => (
-              <tr key={admin._id} className="border-t">
-                <td className="p-2">{admin.fullName}</td>
-                <td className="p-2">{admin.email}</td>
-                <td className="p-2 capitalize">{admin.role}</td>
-                <td className="p-2">
-                  {admin.lastLogin
-                    ? new Date(admin.lastLogin).toLocaleString()
-                    : "Never"}
-                </td>
+        {/* Table */}
+        <div className="bg-white shadow-md rounded mb-6 overflow-x-auto">
+          <table className="w-full table-auto">
+            <thead>
+              <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                <th className="py-3 px-4 text-left">Full Name</th>
+                <th className="py-3 px-4 text-left">Email</th>
+                <th className="py-3 px-4 text-left">Role</th>
+                <th className="py-3 px-4 text-left">Last Login</th>
               </tr>
-            ))}
+            </thead>
+            <tbody className="text-gray-600 text-sm font-light">
+              {paginatedAdmins.map((admin) => (
+                <tr
+                  key={admin._id}
+                  className="border-b border-gray-200 hover:bg-gray-100"
+                >
+                  <td className="py-3 px-4">{admin.fullName}</td>
+                  <td className="py-3 px-4">{admin.email}</td>
+                  <td className="py-3 px-4 capitalize">{admin.role}</td>
+                  <td className="py-3 px-4">
+                    {admin.lastLogin
+                      ? new Date(admin.lastLogin).toLocaleString()
+                      : "Never"}
+                  </td>
+                </tr>
+              ))}
 
-            {filteredAdmins.length === 0 && (
-              <tr>
-                <td colSpan="4" className="text-center p-4 text-gray-500">
-                  No matching records.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              {paginatedAdmins.length === 0 && (
+                <tr>
+                  <td
+                    colSpan="4"
+                    className="text-center p-4 text-gray-500 italic"
+                  >
+                    No matching records.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <Pagination
+          current={page}
+          total={filteredAdmins.length}
+          pageSize={pageSize}
+          showSizeChanger
+          onChange={(p, size) => {
+            setPage(p);
+            setPageSize(size);
+          }}
+        />
       </div>
     </>
   );

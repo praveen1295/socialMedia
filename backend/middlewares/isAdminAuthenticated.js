@@ -13,8 +13,6 @@ const isAdminAuthenticated = async (req, res, next) => {
 
     const decode = await jwt.verify(token, process.env.SECRET_KEY);
 
-    console.log("decode=============>", decode);
-
     if (!decode || decode.userType !== "admin") {
       return res.status(401).json({
         message: "Invalid admin token",

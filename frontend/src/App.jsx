@@ -17,6 +17,7 @@ import Admin from "./admin";
 import AdminUserList from "./admin/AdminUsers";
 import AdminManagerList from "./admin/AdminOrManagerList";
 import PageNotFound from "../src/components/ui/404";
+import AdminPostsList from "./admin/posts";
 
 const browserRouter = createBrowserRouter([
   {
@@ -90,6 +91,14 @@ const browserRouter = createBrowserRouter([
     element: (
       <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
         <AdminManagerList />
+      </ProtectedRoutes>
+    ),
+  },
+  {
+    path: "/admin/posts",
+    element: (
+      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
+        <AdminPostsList />
       </ProtectedRoutes>
     ),
   },

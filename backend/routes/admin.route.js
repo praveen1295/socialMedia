@@ -6,6 +6,7 @@ import {
   getAdminOrManagers,
   getAdminProfile,
   getAllUsers,
+  toggleUserStatus,
 } from "../controllers/admin.controller.js";
 import isAdminAuthenticated from "../middlewares/isAdminAuthenticated.js";
 import {
@@ -30,5 +31,10 @@ router.route("/getAllUsers").get(isAdminAuthenticated, getAllUsers);
 router
   .route("/getAdminOrManagers")
   .get(isAdminAuthenticated, getAdminOrManagers);
+
+// toggle user status
+router
+  .route("/toggleUserStatus/:id")
+  .patch(isAdminAuthenticated, toggleUserStatus);
 
 export default router;

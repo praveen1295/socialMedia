@@ -7,9 +7,11 @@ const API = axios.create({
   withCredentials: true, // To send cookies
 });
 
-export const getAllUsers = async () => {
+export const getAllUsers = async (page = 1, limit = 10) => {
   try {
-    const res = await API.get("api/v1/admin/getAllUsers");
+    const res = await API.get(
+      `/api/v1/admin/getAllUsers?page=${page}&limit=${limit}`
+    );
     return res.data;
   } catch (err) {
     console.error("Failed to fetch users", err);
@@ -19,9 +21,10 @@ export const getAllUsers = async () => {
 
 export const toggleUserStatus = async (userId, isActive) => {
   try {
-    const res = await API.patch(`/admin/update-user-status/${userId}`, {
+    const res = await API.patch(`/api/v1/admin/toggleUserStatus/${userId}`, {
       isActive,
     });
+
     return res.data;
   } catch (err) {
     console.error("Failed to update user status", err);
@@ -29,9 +32,15 @@ export const toggleUserStatus = async (userId, isActive) => {
   }
 };
 
-export const getAdminOrManagers = async () => {
+export const getAdminOrManagers = async ({
+  page = 1,
+  limit = 10,
+  role = "",
+}) => {
   try {
-    const res = await API.get("api/v1/admin/getAdminOrManagers");
+    const res = await API.get("api/v1/admin/getAdminOrManagers", {
+      params: { page, limit, role },
+    });
     return res.data;
   } catch (err) {
     console.error("Failed to fetch admins/managers", err);

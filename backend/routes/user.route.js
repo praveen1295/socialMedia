@@ -36,7 +36,7 @@ router.route("/logout").get(logout);
 // Protected user routes
 router.route("/:id/profile").get(isAuthenticated, getProfile);
 router
-  .route("/profile/edit")
+  .route("/profile/edit/:id")
   .post(
     isAuthenticated,
     upload.single("profilePicture"),

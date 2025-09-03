@@ -1,5 +1,8 @@
 import { Admin } from "../models/admin.model.js";
 import { User } from "../models/user.model.js";
+
+import { Post } from "../models/post.model.js";
+
 import jwt from "jsonwebtoken";
 
 // Create default admin (run this once to create admin credentials)
@@ -179,31 +182,62 @@ export const getAdminProfile = async (req, res) => {
 // Get all users
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password"); // Exclude password field
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const totalUsers = await User.countDocuments();
+
+    const users = await User.find()
+      .select("-password")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); // optional: sort newest first
 
     return res.status(200).json({
       success: true,
-      count: users.length,
+      totalUsers,
+      page,
+      limit,
       users,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({
       message: "Internal server error",
       success: false,
     });
   }
 };
+
 // Get all admins or managers
 export const getAdminOrManagers = async (req, res) => {
   try {
-    const admins = await Admin.find({
-      role: { $in: ["admin", "manager", "super-admin"] }, // Customize roles as needed
-    }).select("-password");
+    const { page = 1, limit = 10, role } = req.query;
+
+    const query = {
+      role: { $in: ["admin", "manager"] },
+    };
+
+    if (role && role !== "all") {
+      query.role = role; // filter specific role
+    }
+
+    const skip = (page - 1) * limit;
+
+    const admins = await Admin.find(query)
+      .select("-password")
+      .skip(skip)
+      .limit(Number(limit));
+
+    const total = await Admin.countDocuments(query);
 
     return res.status(200).json({
       success: true,
       count: admins.length,
+      total,
+      page: Number(page),
+      limit: Number(limit),
       admins,
     });
   } catch (error) {
@@ -214,3 +248,46 @@ export const getAdminOrManagers = async (req, res) => {
     });
   }
 };
+export const toggleUserStatus = async (req, res) => {
+  try {
+    const { id } = req.params; // userId from URL
+    const { isActive } = req.body; // expected: true or false
+
+    // find user
+    const user = await User.findById(id).select("-password");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // update status
+    user.isActive = isActive;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `User ${user.fullName || user.username} is now ${
+        isActive ? "Active" : "Inactive"
+      }.`,
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+        lastLogin: user.lastLogin,
+      },
+    });
+  } catch (error) {
+    console.error("Admin toggleUserStatus error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+// Get all posts with pagination
