@@ -39,11 +39,11 @@ const EditProfile = () => {
         formData.append("bio", input.bio);
         formData.append("gender", input.gender);
         if(input.profilePhoto){
-            formData.append("profilePhoto", input.profilePhoto);
+            formData.append("profilePicture", input.profilePhoto);
         }
         try {
             setLoading(true);
-            const res = await axios.post(config.API_ENDPOINTS.USER.PROFILE_EDIT, formData,{
+            const res = await axios.post(config.API_ENDPOINTS.USER.PROFILE_EDIT(user?._id), formData,{
                 headers:{
                     'Content-Type':'multipart/form-data'
                 },
