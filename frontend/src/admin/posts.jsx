@@ -6,6 +6,7 @@ import {
   getAllAdminPosts,
   approvePost,
 } from "./services/adminPostService";
+import { toast } from "sonner";
 
 function AdminPostsList() {
   const [posts, setPosts] = useState([]);
@@ -46,18 +47,29 @@ function AdminPostsList() {
   const handleSave = async (post) => {
     if (!update.status) return;
 
-    if (update.status === "approved") {
-      await approvePost(post._id);
-      alert("✅ Post approved!");
-    } else {
-      const reason = prompt("Enter rejection reason (optional):");
-      await rejectPost(post._id, { reason });
-      alert("❌ Post rejected!");
+    try {
+      if (update.status === "approved") {
+        const res = await approvePost(post._id);
+        if (res?.success) {
+          toast.success("Post approved successfully!");
+        } else {
+          toast.error(res?.message || "Failed to approve post");
+        }
+      } else {
+        const reason = prompt("Enter rejection reason (optional):");
+        const res = await rejectPost(post._id, { reason });
+        if (res?.success) {
+          toast.success("Post rejected successfully!");
+        } else {
+          toast.error(res?.message || "Failed to reject post");
+        }
+      }
+      fetchPosts();
+      setEditablePostId(null);
+      setUpdate({});
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update post status");
     }
-
-    fetchPosts();
-    setEditablePostId(null);
-    setUpdate({});
   };
 
   const chooseColor = (isApproved) => {

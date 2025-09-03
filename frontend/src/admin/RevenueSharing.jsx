@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AdminNavbar from "./Navbar";
 import { getRevenueSharing, createRevenueSharing, updateRevenueSharing } from "./services/revenueService";
+import { toast } from "sonner";
 
 const RevenueSharing = () => {
   const [current, setCurrent] = useState(null);
@@ -17,9 +18,28 @@ const RevenueSharing = () => {
   useEffect(()=>{ load(); },[]);
 
   const save = async () => {
-    const data = { pricePerView: Number(form.pricePerView), pricePerLike: Number(form.pricePerLike) };
-    if (current) await updateRevenueSharing(data); else await createRevenueSharing(data);
-    await load();
+    // Client-side validation
+    if (!form.pricePerView || form.pricePerView < 0) {
+      toast.error("Price per view must be a positive number");
+      return;
+    }
+    if (!form.pricePerLike || form.pricePerLike < 0) {
+      toast.error("Price per like must be a positive number");
+      return;
+    }
+
+    try {
+      const data = { pricePerView: Number(form.pricePerView), pricePerLike: Number(form.pricePerLike) };
+      const res = current ? await updateRevenueSharing(data) : await createRevenueSharing(data);
+      if (res?.success) {
+        toast.success(`Revenue sharing ${current ? 'updated' : 'created'} successfully!`);
+        await load();
+      } else {
+        toast.error(res?.message || `Failed to ${current ? 'update' : 'create'} revenue sharing`);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || `Failed to ${current ? 'update' : 'create'} revenue sharing`);
+    }
   };
 
   return (

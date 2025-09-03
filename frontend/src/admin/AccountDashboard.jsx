@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AdminNavbar from "./Navbar";
 import { getAccountDashboard, payForPost } from "./services/accountService";
+import { toast } from "sonner";
 
 const AccountDashboard = () => {
   const [data, setData] = useState({ posts: [], pagination: {}, summary: {}, userStats: [] });
@@ -16,8 +17,20 @@ const AccountDashboard = () => {
   useEffect(()=>{ load(); }, [page, statusFilter]);
 
   const handlePay = async (postId) => {
-    await payForPost(postId);
-    await load();
+    if (!window.confirm("Are you sure you want to mark this post as paid?")) {
+      return;
+    }
+    try {
+      const res = await payForPost(postId);
+      if (res?.success) {
+        toast.success("Payment status updated successfully!");
+        await load();
+      } else {
+        toast.error(res?.message || "Failed to update payment status");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update payment status");
+    }
   };
 
   return (

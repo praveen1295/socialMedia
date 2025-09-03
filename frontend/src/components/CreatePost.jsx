@@ -73,6 +73,14 @@ const CreatePost = ({ open, setOpen }) => {
       toast.error('Please select at least one media file');
       return;
     }
+    if (!caption.trim()) {
+      toast.error('Caption is required');
+      return;
+    }
+    if (caption.trim().length < 5) {
+      toast.error('Caption must be at least 5 characters long');
+      return;
+    }
 
     const formData = new FormData();
     formData.append("caption", caption);

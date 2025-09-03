@@ -34,7 +34,20 @@ const EditProfile = () => {
 
 
     const editProfileHandler = async () => {
-        console.log(input);
+        // Client-side validation
+        if (!input.bio?.trim()) {
+            toast.error("Bio is required");
+            return;
+        }
+        if (input.bio.trim().length < 10) {
+            toast.error("Bio must be at least 10 characters long");
+            return;
+        }
+        if (!input.gender) {
+            toast.error("Gender is required");
+            return;
+        }
+        
         const formData = new FormData();
         formData.append("bio", input.bio);
         formData.append("gender", input.gender);
@@ -63,7 +76,7 @@ const EditProfile = () => {
 
         } catch (error) {
             console.log(error);
-            toast.error(error.response.data.messasge);
+            toast.error(error.response?.data?.message || "Failed to update profile");
         } finally{
             setLoading(false);
         }

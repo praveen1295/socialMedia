@@ -53,6 +53,41 @@ const Signup = () => {
 
   const signupHandler = async (e) => {
     e.preventDefault();
+    
+    // Client-side validation
+    if (!input.fullName.trim()) {
+      toast.error("Full name is required");
+      return;
+    }
+    if (input.fullName.trim().length < 2) {
+      toast.error("Full name must be at least 2 characters");
+      return;
+    }
+    if (!input.username.trim()) {
+      toast.error("Username is required");
+      return;
+    }
+    if (input.username.trim().length < 3) {
+      toast.error("Username must be at least 3 characters");
+      return;
+    }
+    if (!input.email.trim()) {
+      toast.error("Email is required");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    if (!input.password.trim()) {
+      toast.error("Password is required");
+      return;
+    }
+    if (input.password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+    
     try {
       setLoading(true);
 

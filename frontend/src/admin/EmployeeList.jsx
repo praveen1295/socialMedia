@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AdminNavbar from "./Navbar";
 import { createEmployee, getEmployees, updateEmployee, deleteEmployee } from "./services/employeeService";
+import { toast } from "sonner";
 
 const EmployeeList = () => {
   const [form, setForm] = useState({ fullName: "", email: "", mobileNo: "", role: "Manager", password: "" });
@@ -15,26 +16,86 @@ const EmployeeList = () => {
   useEffect(() => { fetchList(); }, []);
 
   const submit = async () => {
+    // Client-side validation
+    if (!form.fullName.trim()) {
+      toast.error("Full name is required");
+      return;
+    }
+    if (!form.email.trim()) {
+      toast.error("Email is required");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    if (!form.mobileNo.trim()) {
+      toast.error("Mobile number is required");
+      return;
+    }
+    if (!/^[0-9]{10}$/.test(form.mobileNo)) {
+      toast.error("Mobile number must be exactly 10 digits");
+      return;
+    }
+    if (!form.role) {
+      toast.error("Role is required");
+      return;
+    }
+    if (!form.password.trim()) {
+      toast.error("Password is required");
+      return;
+    }
+    if (form.password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await createEmployee(form);
       if (res?.success) {
-        setForm({ fullName: "", email: "", mobileNo: "", role: "manager", password: "" });
+        toast.success("Employee created successfully!");
+        setForm({ fullName: "", email: "", mobileNo: "", role: "Manager", password: "" });
         fetchList();
+      } else {
+        toast.error(res?.message || "Failed to create employee");
       }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to create employee");
     } finally {
       setLoading(false);
     }
   };
 
   const toggleActive = async (emp) => {
-    await updateEmployee(emp._id, { isActive: !emp.isActive });
-    fetchList();
+    try {
+      const res = await updateEmployee(emp._id, { isActive: !emp.isActive });
+      if (res?.success) {
+        toast.success(`Employee ${!emp.isActive ? 'activated' : 'deactivated'} successfully`);
+        fetchList();
+      } else {
+        toast.error(res?.message || "Failed to update employee status");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update employee status");
+    }
   }
 
   const remove = async (emp) => {
-    await deleteEmployee(emp._id);
-    fetchList();
+    if (!window.confirm(`Are you sure you want to delete ${emp.fullName}?`)) {
+      return;
+    }
+    try {
+      const res = await deleteEmployee(emp._id);
+      if (res?.success) {
+        toast.success("Employee deleted successfully");
+        fetchList();
+      } else {
+        toast.error(res?.message || "Failed to delete employee");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete employee");
+    }
   }
 
   return (

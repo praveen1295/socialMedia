@@ -26,6 +26,17 @@ const Login = () => {
 
   const signupHandler = async (e) => {
     e.preventDefault();
+    
+    // Client-side validation
+    if (!input.emailOrUsername.trim()) {
+      toast.error("Email or username is required");
+      return;
+    }
+    if (!input.password.trim()) {
+      toast.error("Password is required");
+      return;
+    }
+    
     try {
       setLoading(true);
       const res = await axios.post(config.API_ENDPOINTS.USER.LOGIN, input, {

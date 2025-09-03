@@ -33,9 +33,17 @@ const CommentDialog = ({ open, setOpen }) => {
   }
 
   const sendMessageHandler = async () => {
+    if (!text.trim()) {
+      toast.error("Comment cannot be empty");
+      return;
+    }
+    if (text.trim().length < 3) {
+      toast.error("Comment must be at least 3 characters long");
+      return;
+    }
 
     try {
-              const res = await axios.post(config.API_ENDPOINTS.POST.COMMENT(selectedPost?._id), { text }, {
+      const res = await axios.post(config.API_ENDPOINTS.POST.COMMENT(selectedPost?._id), { text }, {
         headers: {
           'Content-Type': 'application/json'
         },
@@ -52,9 +60,12 @@ const CommentDialog = ({ open, setOpen }) => {
         dispatch(setPosts(updatedPostData));
         toast.success(res.data.message);
         setText("");
+      } else {
+        toast.error(res.data.message || "Failed to add comment");
       }
     } catch (error) {
       console.log(error);
+      toast.error(error.response?.data?.message || "Failed to add comment");
     }
   }
 
