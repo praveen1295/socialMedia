@@ -19,6 +19,7 @@ import AdminManagerList from "./admin/AdminOrManagerList";
 import PageNotFound from "../src/components/ui/404";
 import AdminPostsList from "./admin/posts";
 import { toast } from "sonner";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 const browserRouter = createBrowserRouter([
   {
@@ -116,7 +117,7 @@ function App() {
 
   useEffect(() => {
     if (user) {
-      const socketio = io("http://localhost:5000", {
+      const socketio = io(API_BASE_URL, {
         query: {
           userId: user?._id,
         },

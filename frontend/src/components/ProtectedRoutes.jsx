@@ -9,7 +9,14 @@ const ProtectedRoutes = ({ roles, children }) => {
     // if(!user){
     //     navigate("/login");
     // }
-    if (user?.role && !roles?.includes(user?.role)) {
+
+    console.log(
+      "user",
+      user,
+      roles,
+      user?.role && !roles?.includes(user?.role)
+    );
+    if (!roles?.includes(user?.role)) {
       navigate("/login");
     }
   }, []);
