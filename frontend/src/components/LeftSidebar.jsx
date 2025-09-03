@@ -27,6 +27,7 @@ const LeftSidebar = () => {
   const { likeNotification } = useSelector(
     (store) => store.realTimeNotification
   );
+  const { unreadCount } = useSelector((store) => store.chat);
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
 
@@ -90,58 +91,76 @@ const LeftSidebar = () => {
           </div>
           <div>
             {sidebarItems.map((item, index) => {
+              const showNotifBadge = item.text === "Notifications" && likeNotification.length > 0;
+              const showMsgBadge = item.text === "Messages" && unreadCount > 0;
               return (
                 <div
                   onClick={() => sidebarHandler(item.text)}
                   key={index}
                   className="flex items-center gap-3 relative hover:bg-gray-100 dark:hover:bg-neutral-800 cursor-pointer rounded-lg p-3 my-3"
                 >
-                  {item.icon}
-                  <span className="hidden lg:inline">{item.text}</span>
-                  {item.text === "Notifications" &&
-                    likeNotification.length > 0 && (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            size="icon"
-                            className="rounded-full h-5 w-5 bg-red-600 hover:bg-red-600 absolute bottom-6 left-6"
-                          >
-                            {likeNotification.length}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent>
-                          <div>
-                            {likeNotification.length === 0 ? (
-                              <p>No new notification</p>
-                            ) : (
-                              likeNotification.map((notification) => {
-                                return (
-                                  <div
-                                    key={notification.userId}
-                                    className="flex items-center gap-2 my-2"
-                                  >
-                                    <Avatar>
-                                      <AvatarImage
-                                        src={
-                                          notification.userDetails?.profilePicture
-                                        }
-                                      />
-                                      <AvatarFallback>CN</AvatarFallback>
-                                    </Avatar>
-                                    <p className="text-sm">
-                                      <span className="font-bold">
-                                        {notification.userDetails?.username}
-                                      </span>{" "}
-                                      liked your post
-                                    </p>
-                                  </div>
-                                );
-                              })
-                            )}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                  <div className="relative">
+                    {item.icon}
+                    {/* Message unread badge */}
+                    {showMsgBadge && (
+                      <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-red-600 text-[10px] leading-4 text-white text-center">
+                        {unreadCount}
+                      </span>
                     )}
+                    {/* Notifications count badge */}
+                    {showNotifBadge && (
+                      <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-red-600 text-[10px] leading-4 text-white text-center">
+                        {likeNotification.length}
+                      </span>
+                    )}
+                  </div>
+                  <span className="hidden lg:inline">{item.text}</span>
+                  {item.text === "Notifications" && likeNotification.length > 0 && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          size="icon"
+                          className="rounded-full h-5 w-5 bg-red-600 hover:bg-red-600 absolute bottom-6 left-6"
+                        >
+                          {likeNotification.length}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent>
+                        <div>
+                          {likeNotification.length === 0 ? (
+                            <p>No new notification</p>
+                          ) : (
+                            likeNotification.map((notification) => {
+                              const key = `${notification.type}-${notification.userId}-${notification.postId || ''}`;
+                              const isComment = notification.type === 'comment';
+                              const text = isComment ? 'commented on your post' : 'liked your post';
+                              return (
+                                <div
+                                  key={key}
+                                  className="flex items-center gap-2 my-2"
+                                >
+                                  <Avatar>
+                                    <AvatarImage
+                                      src={
+                                        notification.userDetails?.profilePicture
+                                      }
+                                    />
+                                    <AvatarFallback>CN</AvatarFallback>
+                                  </Avatar>
+                                  <p className="text-sm">
+                                    <span className="font-bold">
+                                      {notification.userDetails?.username}
+                                    </span>{" "}
+                                    {text}
+                                  </p>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  )}
                 </div>
               );
             })}
@@ -157,13 +176,21 @@ const LeftSidebar = () => {
           {["Home","Search","Create","Messages","Profile"].map((label) => {
             const item = sidebarItems.find(i => i.text === label);
             if (!item) return null;
+            const showMsgBadge = label === "Messages" && unreadCount > 0;
             return (
               <button
                 key={label}
                 onClick={() => sidebarHandler(label)}
-                className="flex flex-col items-center text-sm"
+                className="relative flex flex-col items-center text-sm"
               >
-                {item.icon}
+                <div className="relative">
+                  {item.icon}
+                  {showMsgBadge && (
+                    <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-red-600 text-[10px] leading-4 text-white text-center">
+                      {unreadCount}
+                    </span>
+                  )}
+                </div>
                 <span className="text-[10px] mt-1">{label}</span>
               </button>
             )

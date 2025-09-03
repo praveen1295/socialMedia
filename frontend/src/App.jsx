@@ -10,7 +10,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { io } from "socket.io-client";
 import { useDispatch, useSelector } from "react-redux";
 import { setSocket } from "./redux/socketSlice";
-import { setOnlineUsers } from "./redux/chatSlice";
+import { setOnlineUsers, incrementUnread } from "./redux/chatSlice";
 import { setLikeNotification } from "./redux/rtnSlice";
 import ProtectedRoutes from "./components/ProtectedRoutes";
 import Admin from "./admin";
@@ -18,6 +18,7 @@ import AdminUserList from "./admin/AdminUsers";
 import AdminManagerList from "./admin/AdminOrManagerList";
 import PageNotFound from "../src/components/ui/404";
 import AdminPostsList from "./admin/posts";
+import { toast } from "sonner";
 
 const browserRouter = createBrowserRouter([
   {
@@ -130,6 +131,16 @@ function App() {
 
       socketio.on("notification", (notification) => {
         dispatch(setLikeNotification(notification));
+        const title = notification?.message || "New notification";
+        const description = notification?.userDetails?.username;
+        toast.message(title, { description });
+      });
+
+      socketio.on("newMessage", (message) => {
+        dispatch(incrementUnread());
+        toast.message("New message", {
+          description: message.message,
+        });
       });
 
       return () => {
