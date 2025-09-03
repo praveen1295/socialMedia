@@ -19,6 +19,7 @@ import CreatePost from "./CreatePost";
 import { setPosts, setSelectedPost } from "@/redux/postSlice";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Button } from "./ui/button";
+import ThemeToggle from "./ThemeToggle";
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
@@ -81,16 +82,19 @@ const LeftSidebar = () => {
   return (
     <>
       {/* Desktop sidebar */}
-      <div className="hidden md:block fixed top-0 z-10 left-0 px-4 border-r border-gray-300 w-[16%] h-screen bg-white">
+      <div className="hidden md:block fixed top-0 z-10 left-0 px-4 border-r border-gray-200 dark:border-gray-800 w-[16%] h-screen bg-white dark:bg-neutral-950">
         <div className="flex flex-col">
-          <h1 className="my-8 pl-3 font-bold text-xl">LOGO</h1>
+          <div className="my-8 pl-3 pr-2 flex items-center justify-between">
+            <h1 className="font-bold text-xl">LOGO</h1>
+            <ThemeToggle />
+          </div>
           <div>
             {sidebarItems.map((item, index) => {
               return (
                 <div
                   onClick={() => sidebarHandler(item.text)}
                   key={index}
-                  className="flex items-center gap-3 relative hover:bg-gray-100 cursor-pointer rounded-lg p-3 my-3"
+                  className="flex items-center gap-3 relative hover:bg-gray-100 dark:hover:bg-neutral-800 cursor-pointer rounded-lg p-3 my-3"
                 >
                   {item.icon}
                   <span className="hidden lg:inline">{item.text}</span>
@@ -148,7 +152,7 @@ const LeftSidebar = () => {
       </div>
 
       {/* Mobile bottom nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-20 border-t border-gray-300 bg-white">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-20 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-neutral-950">
         <div className="flex justify-between px-6 py-3">
           {["Home","Search","Create","Messages","Profile"].map((label) => {
             const item = sidebarItems.find(i => i.text === label);
@@ -164,6 +168,7 @@ const LeftSidebar = () => {
               </button>
             )
           })}
+          <ThemeToggle />
         </div>
       </div>
     </>

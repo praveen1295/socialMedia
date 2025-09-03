@@ -1,4 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Light/dark color scheme hint for better form controls, scrollbars, etc. */
+:root {
+  color-scheme: light dark;
+}
+
+/***** App background/text helpers *****/
+html {
+  @apply h-full;
+}
+body, #root {
+  @apply min-h-screen bg-white text-gray-900;
+}
+.dark body, .dark #root {
+  @apply bg-neutral-900 text-gray-100;
+}
   

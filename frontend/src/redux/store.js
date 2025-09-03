@@ -14,6 +14,7 @@ import {
   PERSIST,
   PURGE,
   REGISTER,
+  persistStore,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
@@ -43,4 +44,8 @@ const store = configureStore({
       },
     }),
 });
+
+const persistor = persistStore(store);
+
+export { persistor };
 export default store;

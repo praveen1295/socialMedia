@@ -4,11 +4,25 @@ import App from './App.jsx'
 import './index.css'
 import { Toaster } from './components/ui/sonner.jsx'
 import { Provider } from 'react-redux'
-import store from './redux/store.js'
+import store, { persistor } from './redux/store.js'
 import { PersistGate } from 'redux-persist/integration/react'
-import { persistStore } from 'redux-persist'
 
-let persistor = persistStore(store)
+// Initialize theme before React mounts
+(function initTheme() {
+  try {
+    const stored = localStorage.getItem('theme')
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    const shouldUseDark = stored ? stored === 'dark' : prefersDark
+    const root = document.documentElement
+    if (shouldUseDark) {
+      root.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+    }
+  } catch (_) {
+    // no-op
+  }
+})();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
