@@ -121,9 +121,11 @@ export const adminLogin = async (req, res) => {
     return res
       .cookie("adminToken", token, {
         httpOnly: true,
-        sameSite: "strict",
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
         secure: process.env.NODE_ENV === "production",
+        // sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // allow cross-site
+
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
       })
       .json({
         message: `Welcome back ${admin.fullName}`,
