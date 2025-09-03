@@ -37,6 +37,7 @@ const Post = ({ post }) => {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [videoStates, setVideoStates] = useState({});
   const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
+  const [likeAnimating, setLikeAnimating] = useState(false);
   const [postLike, setPostLike] = useState(post.likes.length);
   const [comment, setComment] = useState(post.comments);
   const [viewCount, setViewCount] = useState(post.viewCount || 0);
@@ -223,6 +224,8 @@ const Post = ({ post }) => {
         if (res.data.success) {
           setPostLike(postLike + 1);
           setLiked(true);
+          setLikeAnimating(true);
+          setTimeout(()=>setLikeAnimating(false), 400);
           const updatedPostData = posts.map((p) =>
             p?._id === post?._id
               ? {
@@ -481,7 +484,7 @@ const Post = ({ post }) => {
             <FaHeart
               onClick={likeOrDislikeHandler}
               size={"24"}
-              className="cursor-pointer text-red-600"
+              className={`cursor-pointer text-red-600 ${likeAnimating ? 'animate-pulse' : ''}`}
             />
           ) : (
             <FaRegHeart

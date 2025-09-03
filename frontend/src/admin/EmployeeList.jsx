@@ -3,7 +3,7 @@ import AdminNavbar from "./Navbar";
 import { createEmployee, getEmployees, updateEmployee, deleteEmployee } from "./services/employeeService";
 
 const EmployeeList = () => {
-  const [form, setForm] = useState({ fullName: "", email: "", mobileNo: "", role: "manager", password: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", mobileNo: "", role: "Manager", password: "" });
   const [loading, setLoading] = useState(false);
   const [list, setList] = useState([]);
 
@@ -47,8 +47,8 @@ const EmployeeList = () => {
           <input value={form.email} onChange={e=>setForm({...form, email:e.target.value})} placeholder="Email" className="border rounded px-2 py-1" />
           <input value={form.mobileNo} onChange={e=>setForm({...form, mobileNo:e.target.value})} placeholder="Mobile No" className="border rounded px-2 py-1" />
           <select value={form.role} onChange={e=>setForm({...form, role:e.target.value})} className="border rounded px-2 py-1">
-            <option value="manager">Manager</option>
-            <option value="accountant">Accountant</option>
+            <option value="Manager">Manager</option>
+            <option value="Accountant">Accountant</option>
           </select>
           <input value={form.password} onChange={e=>setForm({...form, password:e.target.value})} placeholder="Password" type="password" className="border rounded px-2 py-1" />
           <button onClick={submit} className="md:col-span-5 bg-blue-600 text-white rounded px-3 py-2 disabled:opacity-50" disabled={loading}>{loading? 'Saving...' : 'Create Employee'}</button>

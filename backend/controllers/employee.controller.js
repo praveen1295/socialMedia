@@ -5,8 +5,27 @@ import jwt from "jsonwebtoken";
 
 export const createEmployee = async (req, res) => {
     try {
-        const { fullName, email, mobileNo, role, password } = req.body;
+        let { fullName, email, mobileNo, role, password } = req.body;
         const adminId = req.id; // From authentication middleware
+
+        // Basic input validation and normalization
+        fullName = typeof fullName === 'string' ? fullName.trim() : '';
+        email = typeof email === 'string' ? email.toLowerCase().trim() : '';
+        mobileNo = typeof mobileNo === 'string' ? mobileNo.trim() : '';
+        role = typeof role === 'string' ? role.trim() : '';
+        password = typeof password === 'string' ? password : '';
+
+        // Normalize role to match enum
+        const normalizedRole = role
+            ? role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()
+            : role;
+
+        if (!fullName || !email || !mobileNo || !normalizedRole || !password) {
+            return res.status(400).json({
+                message: 'All fields are required',
+                success: false
+            });
+        }
 
         // Check if employee already exists
         const existingEmployee = await Employee.findOne({
@@ -35,7 +54,7 @@ export const createEmployee = async (req, res) => {
             fullName,
             email,
             mobileNo,
-            role,
+            role: normalizedRole,
             password,
             createdBy: adminId
         });
