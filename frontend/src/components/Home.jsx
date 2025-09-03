@@ -9,8 +9,8 @@ const Home = () => {
     useGetAllPost();
     useGetSuggestedUsers();
     return (
-        <div className='flex'>
-            <div className='flex-grow'>
+        <div className='flex w-full md:pl-0'>
+            <div className='flex-grow w-full'>
                 <Feed />
                 <Outlet />
             </div>

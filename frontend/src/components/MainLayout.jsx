@@ -4,9 +4,9 @@ import LeftSidebar from './LeftSidebar'
 
 const MainLayout = () => {
   return (
-    <div>
+    <div className='min-h-screen w-full flex pb-16 md:pb-0'>
          <LeftSidebar/>
-        <div>
+        <div className='flex-1 w-full md:pl-[16%]'>
             <Outlet/>
         </div>
     </div>
