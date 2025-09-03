@@ -51,22 +51,54 @@ const Post = ({ post }) => {
   const postRef = useRef(null);
 
   useEffect(() => {
-    console.log("user, userProfile", user, userProfile);
-    const uerProfileIds = userProfile?.followers?.map((f) => f._id);
-    console.log("uerProfileIds", uerProfileIds);
-    if (userProfile && user && Array.isArray(uerProfileIds)) {
-      setIsFollowing(uerProfileIds?.includes(user._id));
+    // Determine following state based on the post author's followers
+    const authorFollowers = post?.author?.followers;
+    if (user && Array.isArray(authorFollowers)) {
+      const followerIds = authorFollowers.map((f) => (typeof f === "string" ? f : f?._id));
+      setIsFollowing(followerIds.includes(user._id));
     }
-  }, [userProfile, user]);
+  }, [post, user]);
 
   const handleFollowToggle = async (targetUserId) => {
     console.log("handleFollowToggle", targetUserId);
     const res = await followOrUnfollowUser(targetUserId);
     if (res?.success) {
-      // if toggling main profile
-      if (targetUserId === userProfile._id) {
-        setIsFollowing((prev) => !prev);
-      }
+      // Optimistically update local follow state for the post author
+      setIsFollowing((prev) => !prev);
+
+      // Sync author followers inside posts slice so UI reflects immediately
+      const updatedPosts = posts.map((p) => {
+        if (p?._id !== post?._id) return p;
+        const currentFollowers = Array.isArray(p?.author?.followers)
+          ? p.author.followers
+          : [];
+
+        const normalizedFollowerIds = currentFollowers.map((f) =>
+          typeof f === "string" ? f : f?._id
+        );
+
+        const isCurrentlyFollowing = normalizedFollowerIds.includes(user?._id);
+
+        let newFollowers;
+        if (isCurrentlyFollowing) {
+          newFollowers = currentFollowers.filter((f) =>
+            (typeof f === "string" ? f : f?._id) !== user?._id
+          );
+        } else {
+          // Preserve original object shape (string or object). Push user id string for simplicity
+          newFollowers = [...currentFollowers, user?._id];
+        }
+
+        return {
+          ...p,
+          author: {
+            ...p.author,
+            followers: newFollowers,
+          },
+        };
+      });
+
+      dispatch(setPosts(updatedPosts));
     }
   };
 
