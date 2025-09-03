@@ -141,7 +141,6 @@ export const login = async (req, res) => {
         ],
       });
     }
-    console.log("useraaaa11111===================================>", user);
     if (!user) {
       return res.status(401).json({
         message: "Invalid credentials",
@@ -224,12 +223,25 @@ export const login = async (req, res) => {
     }
 
     console.log("userResponse===", userResponse);
+    // return res
+    //   .cookie("token", token, {
+    //     httpOnly: true,
+    //     sameSite: "strict",
+    //     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    //     secure: process.env.NODE_ENV === "production",
+    //   })
+    //   .json({
+    //     message: `Welcome back ${user.fullName}`,
+    //     success: true,
+    //     user: userResponse,
+    //   });
+
     return res
       .cookie("token", token, {
         httpOnly: true,
-        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production", // HTTPS only in production
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax", // allow cross-site
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        secure: process.env.NODE_ENV === "production",
       })
       .json({
         message: `Welcome back ${user.fullName}`,
