@@ -10,7 +10,7 @@ const SuggestedUsers = () => {
   const { suggestedUsers } = useSelector((store) => store.auth);
 
   const { followOrUnfollowUser, loading, success } = useFollowOrUnfollow();
-
+  const [followBtnIdx, setFollowBtnIdx] = React.useState(null);
   const handleFollowToggle = async (userId) => {
     const res = await followOrUnfollowUser(userId);
 
@@ -29,7 +29,7 @@ const SuggestedUsers = () => {
       </div>
 
       {suggestedUsers?.length > 0 ? (
-        suggestedUsers.map((user) => (
+        suggestedUsers.map((user, idx) => (
           <div
             key={user?._id}
             className="flex items-center justify-between my-5"
@@ -52,10 +52,13 @@ const SuggestedUsers = () => {
             </div>
 
             <button
-              onClick={() => handleFollowToggle(user._id)}
-              disabled={loading}
+              onClick={() => {
+                setFollowBtnIdx(idx);
+                handleFollowToggle(user._id, idx);
+              }}
+              disabled={followBtnIdx === idx && loading}
               className={`text-xs font-bold ${
-                loading
+                followBtnIdx === idx && loading
                   ? "text-gray-400 cursor-not-allowed"
                   : "text-[#3BADF8] hover:text-[#3495d6]"
               }`}

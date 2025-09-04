@@ -56,7 +56,7 @@ function AdminPostsList() {
   const handleSave = async (post) => {
     if (!update.status) return;
 
-    setActionLoading(prev => ({ ...prev, [post._id]: true }));
+    setActionLoading((prev) => ({ ...prev, [post._id]: true }));
     try {
       if (update.status === "approved") {
         const res = await approvePost(post._id);
@@ -78,9 +78,11 @@ function AdminPostsList() {
       setEditablePostId(null);
       setUpdate({});
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update post status");
+      toast.error(
+        error.response?.data?.message || "Failed to update post status"
+      );
     } finally {
-      setActionLoading(prev => ({ ...prev, [post._id]: false }));
+      setActionLoading((prev) => ({ ...prev, [post._id]: false }));
     }
   };
 
@@ -109,13 +111,13 @@ function AdminPostsList() {
     <>
       <AdminNavbar />
 
-      <div className="p-4">
+      <div className="p-4 pt-24 max-w-6xl mx-auto">
         <h2 className="text-2xl font-semibold mb-4">Posts Approval</h2>
 
         {/* Filters */}
         <div className="flex space-x-4 p-4 bg-white shadow-md rounded my-6">
           <select
-            className="border rounded p-2 w-1/2"
+            className="border rounded p-2 w-1/2 text-white"
             value={filter}
             onChange={(e) => {
               setFilter(e.target.value);
@@ -162,7 +164,9 @@ function AdminPostsList() {
                             update.status ||
                             (post.isApproved ? "approved" : "unapproved")
                           }
-                          onChange={(e) => setUpdate({ status: e.target.value })}
+                          onChange={(e) =>
+                            setUpdate({ status: e.target.value })
+                          }
                           className="border rounded px-2 py-1"
                         >
                           <option value="approved">Approved</option>
@@ -194,7 +198,7 @@ function AdminPostsList() {
                               Saving...
                             </>
                           ) : (
-                            'Save'
+                            "Save"
                           )}
                         </button>
                       ) : (

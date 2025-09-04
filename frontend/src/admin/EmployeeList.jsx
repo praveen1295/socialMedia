@@ -1,15 +1,28 @@
 import React, { useEffect, useState } from "react";
 import AdminNavbar from "./Navbar";
-import { createEmployee, getEmployees, updateEmployee, deleteEmployee } from "./services/employeeService";
+import {
+  createEmployee,
+  getEmployees,
+  updateEmployee,
+  deleteEmployee,
+} from "./services/employeeService";
 import { toast } from "sonner";
 import Loader from "../components/ui/loader";
 
 const EmployeeList = () => {
-  const [form, setForm] = useState({ fullName: "", email: "", mobileNo: "", role: "Manager", password: "" });
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    mobileNo: "",
+    role: "Manager",
+    password: "",
+  });
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState({});
   const [list, setList] = useState([]);
+  const [isDelete, setIsDelete] = useState(false);
+  const [isApprove, setIsApprove] = useState(false);
 
   const fetchList = async () => {
     setListLoading(true);
@@ -23,7 +36,9 @@ const EmployeeList = () => {
     }
   };
 
-  useEffect(() => { fetchList(); }, []);
+  useEffect(() => {
+    fetchList();
+  }, []);
 
   const submit = async () => {
     // Client-side validation
@@ -65,7 +80,13 @@ const EmployeeList = () => {
       const res = await createEmployee(form);
       if (res?.success) {
         toast.success("Employee created successfully!");
-        setForm({ fullName: "", email: "", mobileNo: "", role: "Manager", password: "" });
+        setForm({
+          fullName: "",
+          email: "",
+          mobileNo: "",
+          role: "Manager",
+          password: "",
+        });
         fetchList();
       } else {
         toast.error(res?.message || "Failed to create employee");
@@ -78,27 +99,31 @@ const EmployeeList = () => {
   };
 
   const toggleActive = async (emp) => {
-    setActionLoading(prev => ({ ...prev, [emp._id]: true }));
+    setActionLoading((prev) => ({ ...prev, [emp._id]: true }));
     try {
       const res = await updateEmployee(emp._id, { isActive: !emp.isActive });
       if (res?.success) {
-        toast.success(`Employee ${!emp.isActive ? 'activated' : 'deactivated'} successfully`);
+        toast.success(
+          `Employee ${!emp.isActive ? "activated" : "deactivated"} successfully`
+        );
         fetchList();
       } else {
         toast.error(res?.message || "Failed to update employee status");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update employee status");
+      toast.error(
+        error.response?.data?.message || "Failed to update employee status"
+      );
     } finally {
-      setActionLoading(prev => ({ ...prev, [emp._id]: false }));
+      setActionLoading((prev) => ({ ...prev, [emp._id]: false }));
     }
-  }
+  };
 
   const remove = async (emp) => {
     if (!window.confirm(`Are you sure you want to delete ${emp.fullName}?`)) {
       return;
     }
-    setActionLoading(prev => ({ ...prev, [emp._id]: true }));
+    setActionLoading((prev) => ({ ...prev, [emp._id]: true }));
     try {
       const res = await deleteEmployee(emp._id);
       if (res?.success) {
@@ -110,27 +135,52 @@ const EmployeeList = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete employee");
     } finally {
-      setActionLoading(prev => ({ ...prev, [emp._id]: false }));
+      setActionLoading((prev) => ({ ...prev, [emp._id]: false }));
     }
-  }
+  };
 
   return (
     <>
       <AdminNavbar />
-      <div className="p-4 max-w-4xl mx-auto">
+      <div className="p-4 max-w-4xl mx-auto pt-24">
         <h2 className="text-2xl font-semibold mb-4">Employees</h2>
         <div className="bg-white shadow p-4 rounded mb-6 grid grid-cols-1 md:grid-cols-5 gap-2">
-          <input value={form.fullName} onChange={e=>setForm({...form, fullName:e.target.value})} placeholder="Full name" className="border rounded px-2 py-1" />
-          <input value={form.email} onChange={e=>setForm({...form, email:e.target.value})} placeholder="Email" className="border rounded px-2 py-1" />
-          <input value={form.mobileNo} onChange={e=>setForm({...form, mobileNo:e.target.value})} placeholder="Mobile No" className="border rounded px-2 py-1" />
-          <select value={form.role} onChange={e=>setForm({...form, role:e.target.value})} className="border rounded px-2 py-1">
+          <input
+            value={form.fullName}
+            onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+            placeholder="Full name"
+            className="border rounded px-2 py-1"
+          />
+          <input
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            placeholder="Email"
+            className="border rounded px-2 py-1"
+          />
+          <input
+            value={form.mobileNo}
+            onChange={(e) => setForm({ ...form, mobileNo: e.target.value })}
+            placeholder="Mobile No"
+            className="border rounded px-2 py-1"
+          />
+          <select
+            value={form.role}
+            onChange={(e) => setForm({ ...form, role: e.target.value })}
+            className="border rounded px-2 py-1"
+          >
             <option value="Manager">Manager</option>
             <option value="Accountant">Accountant</option>
           </select>
-          <input value={form.password} onChange={e=>setForm({...form, password:e.target.value})} placeholder="Password" type="password" className="border rounded px-2 py-1" />
-          <button 
-            onClick={submit} 
-            className="md:col-span-5 bg-blue-600 text-white rounded px-3 py-2 disabled:opacity-50 flex items-center justify-center gap-2" 
+          <input
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            placeholder="Password"
+            type="password"
+            className="border rounded px-2 py-1"
+          />
+          <button
+            onClick={submit}
+            className="md:col-span-5 bg-blue-600 text-white rounded px-3 py-2 disabled:opacity-50 flex items-center justify-center gap-2"
             disabled={loading}
           >
             {loading ? (
@@ -139,7 +189,7 @@ const EmployeeList = () => {
                 Creating Employee...
               </>
             ) : (
-              'Create Employee'
+              "Create Employee"
             )}
           </button>
         </div>
@@ -162,40 +212,51 @@ const EmployeeList = () => {
                 </tr>
               </thead>
               <tbody className="text-gray-600 text-sm font-light">
-                {list.map(emp => (
-                  <tr key={emp._id} className="border-b border-gray-200 hover:bg-gray-100">
+                {list.map((emp) => (
+                  <tr
+                    key={emp._id}
+                    className="border-b border-gray-200 hover:bg-gray-100"
+                  >
                     <td className="py-3 px-4">{emp.fullName}</td>
                     <td className="py-3 px-4">{emp.email}</td>
                     <td className="py-3 px-4">{emp.mobileNo}</td>
                     <td className="py-3 px-4 capitalize">{emp.role}</td>
-                    <td className="py-3 px-4">{emp.isActive? 'Yes' : 'No'}</td>
-                    <td className="py-3 px-4 space-x-2">
-                      <button 
-                        onClick={()=>toggleActive(emp)} 
+                    <td className="py-3 px-4">{emp.isActive ? "Yes" : "No"}</td>
+                    <td className="py-3 px-4 space-x-2 flex">
+                      <button
+                        onClick={() => {
+                          setIsApprove(true);
+                          toggleActive(emp);
+                        }}
                         className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50 flex items-center gap-1"
                         disabled={actionLoading[emp._id]}
                       >
-                        {actionLoading[emp._id] ? (
+                        {actionLoading[emp._id] && isApprove ? (
                           <>
                             <Loader size="sm" />
-                            {emp.isActive? 'Deactivating...' : 'Activating...'}
+                            {emp.isActive ? "Deactivating..." : "Activating..."}
                           </>
+                        ) : emp.isActive ? (
+                          "Deactivate"
                         ) : (
-                          emp.isActive? 'Deactivate' : 'Activate'
+                          "Activate"
                         )}
                       </button>
-                      <button 
-                        onClick={()=>remove(emp)} 
+                      <button
+                        onClick={() => {
+                          setIsDelete(true);
+                          remove(emp);
+                        }}
                         className="px-3 py-1 bg-red-500 text-white rounded disabled:opacity-50 flex items-center gap-1"
                         disabled={actionLoading[emp._id]}
                       >
-                        {actionLoading[emp._id] ? (
+                        {actionLoading[emp._id] && isDelete ? (
                           <>
                             <Loader size="sm" color="white" />
                             Deleting...
                           </>
                         ) : (
-                          'Delete'
+                          "Delete"
                         )}
                       </button>
                     </td>
@@ -203,7 +264,12 @@ const EmployeeList = () => {
                 ))}
                 {list.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="text-center p-4 text-gray-500 italic">No employees</td>
+                    <td
+                      colSpan="6"
+                      className="text-center p-4 text-gray-500 italic"
+                    >
+                      No employees
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -213,8 +279,6 @@ const EmployeeList = () => {
       </div>
     </>
   );
-}
+};
 
 export default EmployeeList;
-
-
