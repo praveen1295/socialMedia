@@ -43,7 +43,12 @@ export default function AdminNavbar() {
     <nav className="bg-white shadow-md fixed w-full z-50">
       <div className="container mx-auto px-4 flex justify-between items-center h-16">
         {/* Logo */}
-        <div className="text-2xl font-bold text-blue-600">SocialAdmin</div>
+        <div
+          className="text-2xl font-bold text-blue-600 cursor-pointer"
+          onClick={() => navigate("/admin")}
+        >
+          SocialAdmin
+        </div>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex space-x-6 items-center">
