@@ -7,6 +7,7 @@ import {
   approvePost,
 } from "./services/adminPostService";
 import { toast } from "sonner";
+import Loader from "../components/ui/loader";
 
 function AdminPostsList() {
   const [posts, setPosts] = useState([]);
@@ -20,8 +21,12 @@ function AdminPostsList() {
   });
   const [editablePostId, setEditablePostId] = useState(null);
   const [update, setUpdate] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState({});
 
   const fetchPosts = async () => {
+    setLoading(true);
     try {
       const res = await getAllAdminPosts({
         page,
@@ -37,6 +42,10 @@ function AdminPostsList() {
     } catch (error) {
       console.error("Error fetching posts:", error);
       setPosts([]);
+      toast.error("Failed to fetch posts");
+    } finally {
+      setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -47,6 +56,7 @@ function AdminPostsList() {
   const handleSave = async (post) => {
     if (!update.status) return;
 
+    setActionLoading(prev => ({ ...prev, [post._id]: true }));
     try {
       if (update.status === "approved") {
         const res = await approvePost(post._id);
@@ -69,6 +79,8 @@ function AdminPostsList() {
       setUpdate({});
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update post status");
+    } finally {
+      setActionLoading(prev => ({ ...prev, [post._id]: false }));
     }
   };
 
@@ -79,6 +91,19 @@ function AdminPostsList() {
   };
 
   const isEditable = (postId) => postId === editablePostId;
+
+  if (initialLoading) {
+    return (
+      <>
+        <AdminNavbar />
+        <div className="p-4">
+          <div className="flex justify-center items-center h-64">
+            <Loader size="lg" />
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -105,84 +130,98 @@ function AdminPostsList() {
 
         {/* Table */}
         <div className="bg-white shadow-md rounded my-6 overflow-x-auto">
-          <table className="w-full table-auto">
-            <thead>
-              <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                <th className="py-3 px-4 text-left">Caption</th>
-                <th className="py-3 px-4 text-left">Author</th>
-                <th className="py-3 px-4 text-left">Status</th>
-                <th className="py-3 px-4 text-left">Created</th>
-                <th className="py-3 px-4 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="text-gray-600 text-sm font-light">
-              {posts.map((post) => (
-                <tr
-                  key={post._id}
-                  className="border-b border-gray-200 hover:bg-gray-100"
-                >
-                  <td className="py-3 px-4">{post.caption}</td>
-                  <td className="py-3 px-4">
-                    {post.author?.fullName || "N/A"}
-                  </td>
-                  <td className="py-3 px-4">
-                    {isEditable(post._id) ? (
-                      <select
-                        value={
-                          update.status ||
-                          (post.isApproved ? "approved" : "unapproved")
-                        }
-                        onChange={(e) => setUpdate({ status: e.target.value })}
-                        className="border rounded px-2 py-1"
-                      >
-                        <option value="approved">Approved</option>
-                        <option value="unapproved">Not Approved</option>
-                      </select>
-                    ) : (
-                      <span
-                        className={`${chooseColor(
-                          post.isApproved
-                        )} py-1 px-3 rounded-full text-xs`}
-                      >
-                        {post.isApproved ? "Approved" : "Not Approved"}
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4">
-                    {new Date(post.createdAt).toLocaleString()}
-                  </td>
-                  <td className="py-3 px-4">
-                    {isEditable(post._id) ? (
-                      <button
-                        onClick={() => handleSave(post)}
-                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-                      >
-                        Save
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setEditablePostId(post._id)}
-                        className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400"
-                      >
-                        Update Status
-                      </button>
-                    )}
-                  </td>
+          {loading ? (
+            <div className="flex justify-center items-center h-32">
+              <Loader size="lg" />
+            </div>
+          ) : (
+            <table className="w-full table-auto">
+              <thead>
+                <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                  <th className="py-3 px-4 text-left">Caption</th>
+                  <th className="py-3 px-4 text-left">Author</th>
+                  <th className="py-3 px-4 text-left">Status</th>
+                  <th className="py-3 px-4 text-left">Created</th>
+                  <th className="py-3 px-4 text-left">Actions</th>
                 </tr>
-              ))}
-
-              {posts.length === 0 && (
-                <tr>
-                  <td
-                    colSpan="5"
-                    className="text-center p-4 text-gray-500 italic"
+              </thead>
+              <tbody className="text-gray-600 text-sm font-light">
+                {posts.map((post) => (
+                  <tr
+                    key={post._id}
+                    className="border-b border-gray-200 hover:bg-gray-100"
                   >
-                    No posts found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    <td className="py-3 px-4">{post.caption}</td>
+                    <td className="py-3 px-4">
+                      {post.author?.fullName || "N/A"}
+                    </td>
+                    <td className="py-3 px-4">
+                      {isEditable(post._id) ? (
+                        <select
+                          value={
+                            update.status ||
+                            (post.isApproved ? "approved" : "unapproved")
+                          }
+                          onChange={(e) => setUpdate({ status: e.target.value })}
+                          className="border rounded px-2 py-1"
+                        >
+                          <option value="approved">Approved</option>
+                          <option value="unapproved">Not Approved</option>
+                        </select>
+                      ) : (
+                        <span
+                          className={`${chooseColor(
+                            post.isApproved
+                          )} py-1 px-3 rounded-full text-xs`}
+                        >
+                          {post.isApproved ? "Approved" : "Not Approved"}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
+                      {new Date(post.createdAt).toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4">
+                      {isEditable(post._id) ? (
+                        <button
+                          onClick={() => handleSave(post)}
+                          disabled={actionLoading[post._id]}
+                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
+                        >
+                          {actionLoading[post._id] ? (
+                            <>
+                              <Loader size="sm" color="white" />
+                              Saving...
+                            </>
+                          ) : (
+                            'Save'
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setEditablePostId(post._id)}
+                          className="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400"
+                        >
+                          Update Status
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+
+                {posts.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan="5"
+                      className="text-center p-4 text-gray-500 italic"
+                    >
+                      No posts found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
 
         {/* Pagination */}

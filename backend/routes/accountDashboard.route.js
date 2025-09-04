@@ -4,13 +4,13 @@ import {
     processPayment, 
     getUserPaymentHistory 
 } from "../controllers/accountDashboard.controller.js";
-import isAuthenticated from "../middlewares/isAuthenticated.js";
+import isAdminAuthenticated from "../middlewares/isAdminAuthenticated.js";
 
 const router = express.Router();
 
 // All routes are protected and require admin authentication
-router.route('/').get(isAuthenticated, getAccountDashboard);
-router.route('/:id/pay').post(isAuthenticated, processPayment);
-router.route('/user/:userId').get(isAuthenticated, getUserPaymentHistory);
+router.route('/').get(isAdminAuthenticated, getAccountDashboard);
+router.route('/:id/pay').post(isAdminAuthenticated, processPayment);
+router.route('/user/:userId').get(isAdminAuthenticated, getUserPaymentHistory);
 
 export default router;

@@ -78,7 +78,7 @@ const browserRouter = createBrowserRouter([
   {
     path: "/admin",
     element: (
-      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
+      <ProtectedRoutes roles={["admin", "Manager", "Accountant"]}>
         <Admin />
       </ProtectedRoutes>
     ),
@@ -86,7 +86,7 @@ const browserRouter = createBrowserRouter([
   {
     path: "/admin/users",
     element: (
-      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
+      <ProtectedRoutes roles={["admin", "Manager", "Accountant"]}>
         <AdminUserList />
       </ProtectedRoutes>
     ),
@@ -94,7 +94,7 @@ const browserRouter = createBrowserRouter([
   {
     path: "/admin/employees",
     element: (
-      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
+      <ProtectedRoutes roles={["admin", "Manager", "Accountant"]}>
         <EmployeeList />
       </ProtectedRoutes>
     ),
@@ -102,7 +102,7 @@ const browserRouter = createBrowserRouter([
   {
     path: "/admin/admins-managers",
     element: (
-      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
+      <ProtectedRoutes roles={["admin", "Manager", "Accountant"]}>
         <AdminManagerList />
       </ProtectedRoutes>
     ),
@@ -110,7 +110,7 @@ const browserRouter = createBrowserRouter([
   {
     path: "/admin/posts",
     element: (
-      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
+      <ProtectedRoutes roles={["admin", "Manager"]}>
         <AdminPostsList />
       </ProtectedRoutes>
     ),
@@ -118,7 +118,7 @@ const browserRouter = createBrowserRouter([
   {
     path: "/admin/revenue",
     element: (
-      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
+      <ProtectedRoutes roles={["admin", "Manager"]}>
         <RevenueSharing />
       </ProtectedRoutes>
     ),
@@ -126,7 +126,7 @@ const browserRouter = createBrowserRouter([
   {
     path: "/admin/account-dashboard",
     element: (
-      <ProtectedRoutes roles={["admin", "supervisor", "owner"]}>
+      <ProtectedRoutes roles={["admin", "Manager"]}>
         <AccountDashboard />
       </ProtectedRoutes>
     ),

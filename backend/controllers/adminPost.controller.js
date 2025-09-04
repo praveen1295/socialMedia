@@ -1,24 +1,34 @@
 import { Post } from "../models/post.model.js";
 import { User } from "../models/user.model.js";
 import { Admin } from "../models/admin.model.js";
+import { Employee } from "../models/employee.model.js";
 import { RevenueSharing } from "../models/revenueSharing.model.js";
+
+// ✅ Utility: Check if user has required role
+const hasPermission = async (userId, allowedRoles = ["admin", "Manager"]) => {
+  // Check in Admin model
+  const admin = await Admin.findById(userId);
+  if (admin && admin.isActive && allowedRoles.includes(admin.role)) {
+    return { hasPermission: true, role: admin.role, user: admin };
+  }
+
+  // Check in Employee model
+  const employee = await Employee.findById(userId);
+  if (employee && employee.isActive && allowedRoles.includes(employee.role)) {
+    return { hasPermission: true, role: employee.role, user: employee };
+  }
+
+  return { hasPermission: false, role: null, user: null };
+};
 
 export const getPostsForApproval = async (req, res) => {
   try {
     const { page = 1, limit = 10, status = "pending" } = req.query;
     const adminId = req.id;
 
-    // Verify admin exists and has permission
-    const admin = await Admin.findById(adminId);
-    if (!admin || !admin.isActive) {
-      return res.status(403).json({
-        message: "Unauthorized",
-        success: false,
-      });
-    }
-
-    // Check if admin has permission (Admin or Manager)
-    if (!["super-admin", "admin"].includes(admin.role)) {
+    // ✅ Check permissions for Admin + Manager
+    const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+    if (!permissionCheck.hasPermission) {
       return res.status(403).json({
         message: "Insufficient permissions to view posts for approval",
         success: false,
@@ -70,17 +80,9 @@ export const approvePost = async (req, res) => {
     const postId = req.params.id;
     const adminId = req.id;
 
-    // Verify admin exists and has permission
-    const admin = await Admin.findById(adminId);
-    if (!admin || !admin.isActive) {
-      return res.status(403).json({
-        message: "Unauthorized",
-        success: false,
-      });
-    }
-
-    // Check if admin has permission (Admin or Manager)
-    if (!["super-admin", "admin"].includes(admin.role)) {
+    // ✅ Check permissions for Admin + Manager
+    const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+    if (!permissionCheck.hasPermission) {
       return res.status(403).json({
         message: "Insufficient permissions to approve posts",
         success: false,
@@ -103,27 +105,28 @@ export const approvePost = async (req, res) => {
     }
 
     // Get current revenue sharing settings
-    // const revenueSettings = await RevenueSharing.findOne({ isActive: true });
-    // if (!revenueSettings) {
-    //   return res.status(400).json({
-    //     message:
-    //       "No active revenue sharing settings found. Please configure pricing first.",
-    //     success: false,
-    //   });
-    // }
+    const revenueSettings = await RevenueSharing.findOne({ isActive: true });
+    if (!revenueSettings) {
+      return res.status(400).json({
+        message:
+          "No active revenue sharing settings found. Please configure pricing first.",
+        success: false,
+      });
+    }
 
     // Calculate pricing
-    // const viewPrice = post.viewCount * revenueSettings.pricePerView;
-    // const likePrice = post.likes.length * revenueSettings.pricePerLike;
-    // const totalPrice = viewPrice + likePrice;
+    const viewPrice = post.viewCount * revenueSettings.pricePerView;
+    const likePrice = post.likes.length * revenueSettings.pricePerLike;
+    const totalPrice = viewPrice + likePrice;
 
     // Update post
     post.isApproved = true;
     post.approvedBy = adminId;
     post.approvedAt = new Date();
-    // post.viewPrice = viewPrice;
-    // post.likePrice = likePrice;
-    // post.totalPrice = totalPrice;
+    post.viewPrice = viewPrice;
+    post.likePrice = likePrice;
+    post.totalPrice = totalPrice;
+    post.paymentStatus = "pending";
 
     await post.save();
 
@@ -136,11 +139,11 @@ export const approvePost = async (req, res) => {
       pricing: {
         viewCount: post.viewCount,
         likeCount: post.likes.length,
-        // pricePerView: revenueSettings.pricePerView,
-        // pricePerLike: revenueSettings.pricePerLike,
-        // viewPrice,
-        // likePrice,
-        // totalPrice,
+        pricePerView: revenueSettings.pricePerView,
+        pricePerLike: revenueSettings.pricePerLike,
+        viewPrice,
+        likePrice,
+        totalPrice,
       },
       success: true,
     });
@@ -158,24 +161,10 @@ export const rejectPost = async (req, res) => {
     const postId = req.params.id;
     const adminId = req.id;
     const { reason } = req.body;
-    console.log(
-      "--========================================",
-      reason,
-      postId,
-      adminId
-    );
 
-    // Verify admin exists and has permission
-    const admin = await Admin.findById(adminId);
-    if (!admin || !admin.isActive) {
-      return res.status(403).json({
-        message: "Unauthorized",
-        success: false,
-      });
-    }
-
-    // Check if admin has permission (Admin or Manager)
-    if (!["super-admin", "admin"].includes(admin.role)) {
+    // ✅ Check permissions for Admin + Manager
+    const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+    if (!permissionCheck.hasPermission) {
       return res.status(403).json({
         message: "Insufficient permissions to reject posts",
         success: false,
@@ -224,11 +213,11 @@ export const getPostDetails = async (req, res) => {
     const postId = req.params.id;
     const adminId = req.id;
 
-    // Verify admin exists
-    const admin = await Admin.findById(adminId);
-    if (!admin || !admin.isActive) {
+    // ✅ Check permissions for Admin + Manager
+    const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+    if (!permissionCheck.hasPermission) {
       return res.status(403).json({
-        message: "Unauthorized",
+        message: "Insufficient permissions to view post details",
         success: false,
       });
     }
@@ -280,6 +269,17 @@ export const getPostDetails = async (req, res) => {
 export const getAllAdminPosts = async (req, res) => {
   try {
     const { page = 1, limit = 10, status } = req.query;
+    const adminId = req.id;
+
+    // ✅ Check permissions for Admin + Manager
+    const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+    if (!permissionCheck.hasPermission) {
+      return res.status(403).json({
+        message: "Insufficient permissions to view posts",
+        success: false,
+      });
+    }
+
     const skip = (page - 1) * limit;
 
     // Build filter dynamically
@@ -328,6 +328,16 @@ export const updateAdminPost = async (req, res) => {
       likePrice,
       totalPrice,
     } = req.body;
+    const adminId = req.id;
+
+    // ✅ Check permissions for Admin + Manager
+    const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+    if (!permissionCheck.hasPermission) {
+      return res.status(403).json({
+        message: "Insufficient permissions to update posts",
+        success: false,
+      });
+    }
 
     const post = await Post.findById(id);
     if (!post) {

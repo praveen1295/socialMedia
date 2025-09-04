@@ -10,11 +10,13 @@ import axios from 'axios'
 import { config } from '../config/config';
 import { toast } from 'sonner'
 import { setPosts } from '@/redux/postSlice'
+import Loader from './ui/loader'
 
 const CommentDialog = ({ open, setOpen }) => {
   const [text, setText] = useState("");
   const { selectedPost, posts } = useSelector(store => store.post);
   const [comment, setComment] = useState([]);
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -42,6 +44,7 @@ const CommentDialog = ({ open, setOpen }) => {
       return;
     }
 
+    setLoading(true);
     try {
       const res = await axios.post(config.API_ENDPOINTS.POST.COMMENT(selectedPost?._id), { text }, {
         headers: {
@@ -66,6 +69,8 @@ const CommentDialog = ({ open, setOpen }) => {
     } catch (error) {
       console.log(error);
       toast.error(error.response?.data?.message || "Failed to add comment");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -118,7 +123,21 @@ const CommentDialog = ({ open, setOpen }) => {
             <div className='p-4'>
               <div className='flex items-center gap-2'>
                 <input type="text" value={text} onChange={changeEventHandler} placeholder='Add a comment...' className='w-full outline-none border text-sm border-gray-300 p-2 rounded' />
-                <Button disabled={!text.trim()} onClick={sendMessageHandler} variant="outline">Send</Button>
+                <Button 
+                  disabled={!text.trim() || loading} 
+                  onClick={sendMessageHandler} 
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <Loader size="sm" />
+                      Sending...
+                    </>
+                  ) : (
+                    'Send'
+                  )}
+                </Button>
               </div>
             </div>
           </div>

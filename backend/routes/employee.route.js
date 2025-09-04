@@ -7,7 +7,7 @@ import {
     deleteEmployee, 
     employeeLogin 
 } from "../controllers/employee.controller.js";
-import isAuthenticated from "../middlewares/isAuthenticated.js";
+import isAdminAuthenticated from "../middlewares/isAdminAuthenticated.js";
 
 const router = express.Router();
 
@@ -15,10 +15,10 @@ const router = express.Router();
 router.route('/login').post(employeeLogin);
 
 // Protected admin routes
-router.route('/').post(isAuthenticated, createEmployee);
-router.route('/').get(isAuthenticated, getEmployees);
-router.route('/:id').get(isAuthenticated, getEmployeeById);
-router.route('/:id').put(isAuthenticated, updateEmployee);
-router.route('/:id').delete(isAuthenticated, deleteEmployee);
+router.route('/').post(isAdminAuthenticated, createEmployee);
+router.route('/').get(isAdminAuthenticated, getEmployees);
+router.route('/:id').get(isAdminAuthenticated, getEmployeeById);
+router.route('/:id').put(isAdminAuthenticated, updateEmployee);
+router.route('/:id').delete(isAdminAuthenticated, deleteEmployee);
 
 export default router;

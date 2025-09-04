@@ -3,15 +3,20 @@ import { useDispatch, useSelector } from "react-redux";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { setSelectedUser } from "@/redux/authSlice";
 import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import { Button as BT } from "./ui/button";
 import { MessageCircleCode } from "lucide-react";
 import Messages from "./Messages";
 import axios from "axios";
 import { config } from "../config/config";
 import { setMessages } from "@/redux/chatSlice";
 import useGetUserFollowings from "@/hooks/useGetUserFollowings";
+import { Result, Button } from "antd";
+import { UserAddOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 const ChatPage = () => {
+  const navigate = useNavigate();
+
   const [textMessage, setTextMessage] = useState("");
   const { user, suggestedUsers, selectedUser } = useSelector(
     (store) => store.auth
@@ -52,6 +57,31 @@ const ChatPage = () => {
       dispatch(setSelectedUser(null));
     };
   }, []);
+
+  if (userFollowings?.following && userFollowings?.following?.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-[70vh]">
+        <Result
+          icon={
+            <UserAddOutlined style={{ fontSize: "48px", color: "#1890ff" }} />
+          }
+          title="No Connections Yet"
+          subTitle="To start messaging, please follow someone first."
+          extra={
+            <Button
+              type="primary"
+              icon={<UserAddOutlined />}
+              onClick={() => {
+                navigate("/");
+              }}
+            >
+              Find People to Follow
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
   return (
     <div className="flex ml-[16%] h-screen">
       <section className="w-full md:w-1/4 my-8">
@@ -105,9 +135,7 @@ const ChatPage = () => {
               className="flex-1 mr-2 focus-visible:ring-transparent"
               placeholder="Messages..."
             />
-            <Button onClick={() => sendMessageHandler(selectedUser?._id)}>
-              Send
-            </Button>
+            <BT onClick={() => sendMessageHandler(selectedUser?._id)}>Send</BT>
           </div>
         </section>
       ) : (

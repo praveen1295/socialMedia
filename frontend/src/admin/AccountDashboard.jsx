@@ -2,16 +2,28 @@ import React, { useEffect, useState } from "react";
 import AdminNavbar from "./Navbar";
 import { getAccountDashboard, payForPost } from "./services/accountService";
 import { toast } from "sonner";
+import Loader from "../components/ui/loader";
 
 const AccountDashboard = () => {
   const [data, setData] = useState({ posts: [], pagination: {}, summary: {}, userStats: [] });
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [statusFilter, setStatusFilter] = useState(""); // '', 'pending', 'paid'
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState({});
 
   const load = async () => {
-    const res = await getAccountDashboard({ page, limit, paymentStatus: statusFilter });
-    if (res?.success) setData(res);
+    setLoading(true);
+    try {
+      const res = await getAccountDashboard({ page, limit, paymentStatus: statusFilter });
+      if (res?.success) setData(res);
+    } catch (error) {
+      toast.error("Failed to load account dashboard data");
+    } finally {
+      setLoading(false);
+      setInitialLoading(false);
+    }
   };
 
   useEffect(()=>{ load(); }, [page, statusFilter]);
@@ -20,6 +32,7 @@ const AccountDashboard = () => {
     if (!window.confirm("Are you sure you want to mark this post as paid?")) {
       return;
     }
+    setActionLoading(prev => ({ ...prev, [postId]: true }));
     try {
       const res = await payForPost(postId);
       if (res?.success) {
@@ -30,8 +43,23 @@ const AccountDashboard = () => {
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update payment status");
+    } finally {
+      setActionLoading(prev => ({ ...prev, [postId]: false }));
     }
   };
+
+  if (initialLoading) {
+    return (
+      <>
+        <AdminNavbar />
+        <div className="p-4">
+          <div className="flex justify-center items-center h-64">
+            <Loader size="lg" />
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -63,39 +91,58 @@ const AccountDashboard = () => {
               <option value="paid">Paid</option>
             </select>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full table-auto">
-              <thead>
-                <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                  <th className="py-3 px-4 text-left">Author</th>
-                  <th className="py-3 px-4 text-left">Views</th>
-                  <th className="py-3 px-4 text-left">Likes</th>
-                  <th className="py-3 px-4 text-left">Total Price</th>
-                  <th className="py-3 px-4 text-left">Status</th>
-                  <th className="py-3 px-4 text-left">Action</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-600 text-sm font-light">
-                {data.posts.map(p => (
-                  <tr key={p._id} className="border-b border-gray-200 hover:bg-gray-100">
-                    <td className="py-3 px-4">{p.author?.username}</td>
-                    <td className="py-3 px-4">{p.viewCount}</td>
-                    <td className="py-3 px-4">{p.likes?.length || 0}</td>
-                    <td className="py-3 px-4">₹{p.totalPrice || 0}</td>
-                    <td className="py-3 px-4 capitalize">{p.paymentStatus || 'pending'}</td>
-                    <td className="py-3 px-4">
-                      <button disabled={p.paymentStatus==='paid'} onClick={()=>handlePay(p._id)} className={`px-3 py-1 rounded ${p.paymentStatus==='paid' ? 'bg-gray-300' : 'bg-green-600 text-white'}`}>{p.paymentStatus==='paid' ? 'Paid' : 'Pay'}</button>
-                    </td>
+          {loading ? (
+            <div className="flex justify-center items-center h-32">
+              <Loader size="lg" />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full table-auto">
+                <thead>
+                  <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                    <th className="py-3 px-4 text-left">Author</th>
+                    <th className="py-3 px-4 text-left">Views</th>
+                    <th className="py-3 px-4 text-left">Likes</th>
+                    <th className="py-3 px-4 text-left">Total Price</th>
+                    <th className="py-3 px-4 text-left">Status</th>
+                    <th className="py-3 px-4 text-left">Action</th>
                   </tr>
-                ))}
-                {data.posts.length === 0 && (
-                  <tr>
-                    <td colSpan="6" className="text-center p-4 text-gray-500 italic">No posts</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="text-gray-600 text-sm font-light">
+                  {data.posts.map(p => (
+                    <tr key={p._id} className="border-b border-gray-200 hover:bg-gray-100">
+                      <td className="py-3 px-4">{p.author?.username}</td>
+                      <td className="py-3 px-4">{p.viewCount}</td>
+                      <td className="py-3 px-4">{p.likes?.length || 0}</td>
+                      <td className="py-3 px-4">₹{p.totalPrice || 0}</td>
+                      <td className="py-3 px-4 capitalize">{p.paymentStatus || 'pending'}</td>
+                      <td className="py-3 px-4">
+                        <button 
+                          disabled={p.paymentStatus==='paid' || actionLoading[p._id]} 
+                          onClick={()=>handlePay(p._id)} 
+                          className={`px-3 py-1 rounded disabled:opacity-50 flex items-center gap-1 ${p.paymentStatus==='paid' ? 'bg-gray-300' : 'bg-green-600 text-white'}`}
+                        >
+                          {actionLoading[p._id] ? (
+                            <>
+                              <Loader size="sm" color="white" />
+                              Processing...
+                            </>
+                          ) : (
+                            p.paymentStatus==='paid' ? 'Paid' : 'Pay'
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {data.posts.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="text-center p-4 text-gray-500 italic">No posts</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </>

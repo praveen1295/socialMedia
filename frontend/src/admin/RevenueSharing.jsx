@@ -2,16 +2,26 @@ import React, { useEffect, useState } from "react";
 import AdminNavbar from "./Navbar";
 import { getRevenueSharing, createRevenueSharing, updateRevenueSharing } from "./services/revenueService";
 import { toast } from "sonner";
+import Loader from "../components/ui/loader";
 
 const RevenueSharing = () => {
   const [current, setCurrent] = useState(null);
   const [form, setForm] = useState({ pricePerView: '', pricePerLike: '' });
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const load = async () => {
-    const res = await getRevenueSharing();
-    if (res?.success) {
-      setCurrent(res.currentSettings);
-      if (res.currentSettings) setForm({ pricePerView: res.currentSettings.pricePerView, pricePerLike: res.currentSettings.pricePerLike });
+    setInitialLoading(true);
+    try {
+      const res = await getRevenueSharing();
+      if (res?.success) {
+        setCurrent(res.currentSettings);
+        if (res.currentSettings) setForm({ pricePerView: res.currentSettings.pricePerView, pricePerLike: res.currentSettings.pricePerLike });
+      }
+    } catch (error) {
+      toast.error("Failed to load revenue sharing settings");
+    } finally {
+      setInitialLoading(false);
     }
   };
 
@@ -28,6 +38,7 @@ const RevenueSharing = () => {
       return;
     }
 
+    setLoading(true);
     try {
       const data = { pricePerView: Number(form.pricePerView), pricePerLike: Number(form.pricePerLike) };
       const res = current ? await updateRevenueSharing(data) : await createRevenueSharing(data);
@@ -39,8 +50,23 @@ const RevenueSharing = () => {
       }
     } catch (error) {
       toast.error(error.response?.data?.message || `Failed to ${current ? 'update' : 'create'} revenue sharing`);
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (initialLoading) {
+    return (
+      <>
+        <AdminNavbar />
+        <div className="p-4 max-w-xl mx-auto">
+          <div className="flex justify-center items-center h-64">
+            <Loader size="lg" />
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -56,7 +82,20 @@ const RevenueSharing = () => {
             <label className="w-40">Price per Like</label>
             <input type="number" value={form.pricePerLike} onChange={e=>setForm({...form, pricePerLike:e.target.value})} className="border rounded px-2 py-1 flex-1" />
           </div>
-          <button onClick={save} className="bg-blue-600 text-white rounded px-3 py-2">{current? 'Update' : 'Create'} Pricing</button>
+          <button 
+            onClick={save} 
+            className="bg-blue-600 text-white rounded px-3 py-2 disabled:opacity-50 flex items-center justify-center gap-2"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader size="sm" color="white" />
+                {current ? 'Updating...' : 'Creating...'}
+              </>
+            ) : (
+              current ? 'Update' : 'Create'
+            )} Pricing
+          </button>
         </div>
         {current && (
           <div className="mt-6 text-sm text-gray-600">

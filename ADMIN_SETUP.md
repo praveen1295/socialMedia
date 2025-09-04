@@ -25,8 +25,8 @@ curl -X POST http://localhost:5000/api/v1/admin/create-default
 
 - **Email**: `admin@socialmedia.com`
 - **Password**: `Admin@123`
-- **Role**: `super-admin`
-- **Permissions**: 
+- **Role**: `Manager`
+- **Permissions**:
   - user-management
   - post-management
   - content-moderation
@@ -63,9 +63,11 @@ The admin system includes:
 ## API Endpoints
 
 ### Admin Authentication
+
 - `POST /api/v1/admin/login` - Admin login
 - `GET /api/v1/admin/logout` - Admin logout
 - `GET /api/v1/admin/profile` - Get admin profile (requires authentication)
 
 ### Admin Setup
+
 - `POST /api/v1/admin/create-default` - Create default admin account

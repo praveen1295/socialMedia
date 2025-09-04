@@ -4,10 +4,10 @@ import { Button } from "./ui/button";
 import axios from "axios";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { setAuthUser } from "@/redux/authSlice";
 import { config } from "../config/config";
+import Loader from "./ui/loader";
 
 const Login = () => {
   const [input, setInput] = useState({
@@ -26,7 +26,7 @@ const Login = () => {
 
   const signupHandler = async (e) => {
     e.preventDefault();
-    
+
     // Client-side validation
     if (!input.emailOrUsername.trim()) {
       toast.error("Email or username is required");
@@ -36,21 +36,43 @@ const Login = () => {
       toast.error("Password is required");
       return;
     }
-    
+
     try {
       setLoading(true);
-      const res = await axios.post(config.API_ENDPOINTS.USER.LOGIN, input, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        withCredentials: true,
-      });
+
+      let res;
+
+      if (input?.role === "employee") {
+        res = await axios.post(
+          config.API_ENDPOINTS.USER.EMPLOYEE_LOGIN,
+          input,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            withCredentials: true,
+          }
+        );
+      } else {
+        res = await axios.post(config.API_ENDPOINTS.USER.LOGIN, input, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        });
+      }
 
       if (res.data.success) {
-        dispatch(setAuthUser(res.data.user));
+        console.log("response.data", res.data);
+        let data = res.data.employee?res.data.employee:res.data.user;
+        dispatch(setAuthUser(data));
 
         // redirect based on selected role
-        if (input?.role === "admin" || input?.role === "manager") {
+        if (
+          input?.role === "admin" ||
+          input?.role === "Manager" ||
+          input?.role === "Accountant"
+        ) {
           navigate("/admin");
         } else {
           navigate("/");
@@ -75,7 +97,11 @@ const Login = () => {
     if (user) {
       // auto-redirect if already logged in
       navigate(
-        user?.role === "admin" || user?.role === "manager" ? "/admin" : "/"
+        user?.role === "admin" ||
+          user?.role === "Manager" ||
+          user?.role === "Accountant"
+          ? "/admin"
+          : "/"
       );
     }
   }, [user, navigate]);
@@ -134,20 +160,25 @@ const Login = () => {
           >
             <option value="user">User</option>
             <option value="admin">Admin</option>
+            <option value="employee">Employee</option>
           </select>
         </div>
 
         {/* Submit Button */}
-        {loading ? (
-          <Button disabled className="mt-4">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Signing in...
-          </Button>
-        ) : (
-          <Button type="submit" className="mt-4">
-            Sign In
-          </Button>
-        )}
+        <Button 
+          type="submit" 
+          className="mt-4 flex items-center justify-center gap-2" 
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <Loader size="sm" color="white" />
+              Signing in...
+            </>
+          ) : (
+            'Sign In'
+          )}
+        </Button>
 
         {/* Signup Link */}
         <span className="text-center text-sm text-gray-600">

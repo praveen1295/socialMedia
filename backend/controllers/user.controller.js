@@ -171,7 +171,11 @@ export const login = async (req, res) => {
 
     // Generate JWT token
     const token = await jwt.sign(
-      { userId: user._id, userType: role === "admin" ? "admin" : "user" },
+      { 
+        userId: user._id, 
+        userType: role === "admin" ? "admin" : "user",
+        role: user.role
+      },
       process.env.SECRET_KEY,
       { expiresIn: "7d" }
     );
@@ -260,10 +264,13 @@ export const login = async (req, res) => {
 export const logout = async (_, res) => {
   console.log("logout called");
   try {
-    return res.cookie("token", "", { maxAge: 0 }).json({
-      message: "Logged out successfully.",
-      success: true,
-    });
+    return res
+      .cookie("token", "", { maxAge: 0 })
+      .cookie("adminToken", "", { maxAge: 0 })
+      .json({
+        message: "Logged out successfully.",
+        success: true,
+      });
   } catch (error) {
     console.log(error);
   }

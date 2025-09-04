@@ -6,9 +6,12 @@ export const config = {
   API_ENDPOINTS: {
     USER: {
       LOGIN: `${API_BASE_URL}/api/v1/user/login`,
+      EMPLOYEE_LOGIN: `${API_BASE_URL}/api/v1/employee/login`,
+
       REGISTER: `${API_BASE_URL}/api/v1/user/register`,
       LOGOUT: `${API_BASE_URL}/api/v1/user/logout`,
-      PROFILE_EDIT: (userId) => `${API_BASE_URL}/api/v1/user/profile/edit/${userId}`,
+      PROFILE_EDIT: (userId) =>
+        `${API_BASE_URL}/api/v1/user/profile/edit/${userId}`,
       SUGGESTED: `${API_BASE_URL}/api/v1/user/suggested`,
       GET_PROFILE: (userId) => `${API_BASE_URL}/api/v1/user/${userId}/profile`,
       FOLLOW_OR_UNFOLLOW: (userId) =>

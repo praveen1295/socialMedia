@@ -4,12 +4,13 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
 import { readFileAsDataURL } from '@/lib/utils';
-import { Loader2, X, Image, Video, Upload } from 'lucide-react';
+import { X, Image, Video, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios'
 import { config } from '../config/config';
 import { useDispatch, useSelector } from 'react-redux';
 import { setPosts } from '@/redux/postSlice';
+import Loader from './ui/loader';
 
 const CreatePost = ({ open, setOpen }) => {
   const mediaRef = useRef();
@@ -214,11 +215,11 @@ const CreatePost = ({ open, setOpen }) => {
           <Button 
             onClick={createPostHandler} 
             disabled={loading}
-            className="w-full"
+            className="w-full flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader size="sm" color="white" />
                 Creating Post...
               </>
             ) : (

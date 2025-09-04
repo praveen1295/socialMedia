@@ -12,9 +12,10 @@ import {
 import axios from "axios";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
-import { Loader2, Upload, User } from "lucide-react";
+import { Upload, User } from "lucide-react";
 import { useSelector } from "react-redux";
 import { config } from "../config/config";
+import Loader from "./ui/loader";
 
 const Signup = () => {
   const [input, setInput] = useState({
@@ -274,16 +275,20 @@ const Signup = () => {
           </Select>
         </div>
 
-        {loading ? (
-          <Button disabled className="mt-4">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Creating Account...
-          </Button>
-        ) : (
-          <Button type="submit" className="mt-4">
-            Create Account
-          </Button>
-        )}
+        <Button 
+          type="submit" 
+          className="mt-4 flex items-center justify-center gap-2" 
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <Loader size="sm" color="white" />
+              Creating Account...
+            </>
+          ) : (
+            'Create Account'
+          )}
+        </Button>
 
         <span className="text-center text-sm text-gray-600">
           Already have an account?{" "}

@@ -4,11 +4,12 @@ import { setSelectedPost } from "@/redux/postSlice";
 import axios from "axios";
 import React, { useState } from "react";
 import { FaBars, FaTimes, FaUserCircle } from "react-icons/fa";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 export default function AdminNavbar() {
+  const { user } = useSelector((store) => store.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -22,22 +23,42 @@ export default function AdminNavbar() {
       if (res?.data?.success) {
         dispatch(setAuthUser(null));
         dispatch(setSelectedPost(null));
-        // dispatch(setPosts([]));
         navigate("/login");
         toast.success(res.data.message);
       }
     } catch (error) {
       console.log("error", error);
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Logout failed");
     }
   };
 
   const navLinks = [
-    { name: "Employees", path: "/admin/employees" },
-    { name: "Revenue", path: "/admin/revenue" },
-    { name: "Posts", path: "/admin/posts" },
-    { name: "Accounts", path: "/admin/account-dashboard" },
+    {
+      name: "Employees",
+      path: "/admin/employees",
+      roles: ["admin"],
+    },
+    {
+      name: "Revenue",
+      path: "/admin/revenue",
+      roles: ["admin", "Manager"],
+    },
+    {
+      name: "Posts",
+      path: "/admin/posts",
+      roles: ["admin", "Manager"],
+    },
+    {
+      name: "Accounts",
+      path: "/admin/account-dashboard",
+      roles: ["admin", "Manager"],
+    },
   ];
+
+  // ✅ Filter links by user role
+  const filteredLinks = navLinks.filter((link) =>
+    link.roles.includes(user?.role)
+  );
 
   return (
     <nav className="bg-white shadow-md fixed w-full z-50">
@@ -52,7 +73,7 @@ export default function AdminNavbar() {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex space-x-6 items-center">
-          {navLinks.map((link) => (
+          {filteredLinks.map((link) => (
             <Link
               key={link.name}
               to={link.path}
@@ -87,10 +108,8 @@ export default function AdminNavbar() {
                   Profile
                 </Link>
                 <button
-                  className="block px-4 py-2 text-red-500 hover:bg-red-50"
-                  onClick={() => {
-                    logoutHandler();
-                  }}
+                  className="block px-4 py-2 text-red-500 hover:bg-red-50 w-full text-left"
+                  onClick={logoutHandler}
                 >
                   Logout
                 </button>
@@ -111,7 +130,7 @@ export default function AdminNavbar() {
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="md:hidden bg-white shadow-lg">
-          {navLinks.map((link) => (
+          {filteredLinks.map((link) => (
             <Link
               key={link.name}
               to={link.path}
@@ -128,10 +147,8 @@ export default function AdminNavbar() {
             Profile
           </Link>
           <button
-            onClick={() => {
-              logoutHandler();
-            }}
-            className="block px-4 py-2 text-red-500 hover:bg-red-50"
+            onClick={logoutHandler}
+            className="block px-4 py-2 text-red-500 hover:bg-red-50 w-full text-left"
           >
             Logout
           </button>

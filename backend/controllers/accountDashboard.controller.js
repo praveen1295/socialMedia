@@ -1,18 +1,36 @@
 import { Post } from "../models/post.model.js";
 import { User } from "../models/user.model.js";
 import { Admin } from "../models/admin.model.js";
+import { Employee } from "../models/employee.model.js";
 import { RevenueSharing } from "../models/revenueSharing.model.js";
+
+// ✅ Utility: Check if user has required role
+const hasPermission = async (userId, allowedRoles = ["admin", "Manager"]) => {
+  // Check in Admin model
+  const admin = await Admin.findById(userId);
+  if (admin && admin.isActive && allowedRoles.includes(admin.role)) {
+    return { hasPermission: true, role: admin.role, user: admin };
+  }
+
+  // Check in Employee model
+  const employee = await Employee.findById(userId);
+  if (employee && employee.isActive && allowedRoles.includes(employee.role)) {
+    return { hasPermission: true, role: employee.role, user: employee };
+  }
+
+  return { hasPermission: false, role: null, user: null };
+};
 
 export const getAccountDashboard = async (req, res) => {
     try {
         const { page = 1, limit = 10, paymentStatus } = req.query;
         const adminId = req.id;
 
-        // Verify admin exists
-        const admin = await Admin.findById(adminId);
-        if (!admin || !admin.isActive) {
+        // ✅ Check permissions for Admin + Manager
+        const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+        if (!permissionCheck.hasPermission) {
             return res.status(403).json({
-                message: 'Unauthorized',
+                message: 'Insufficient permissions to view account dashboard',
                 success: false
             });
         }
@@ -128,11 +146,11 @@ export const processPayment = async (req, res) => {
         const postId = req.params.id;
         const adminId = req.id;
 
-        // Verify admin exists
-        const admin = await Admin.findById(adminId);
-        if (!admin || !admin.isActive) {
+        // ✅ Check permissions for Admin + Manager
+        const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+        if (!permissionCheck.hasPermission) {
             return res.status(403).json({
-                message: 'Unauthorized',
+                message: 'Insufficient permissions to process payments',
                 success: false
             });
         }
@@ -197,11 +215,11 @@ export const getUserPaymentHistory = async (req, res) => {
         const { page = 1, limit = 10 } = req.query;
         const adminId = req.id;
 
-        // Verify admin exists
-        const admin = await Admin.findById(adminId);
-        if (!admin || !admin.isActive) {
+        // ✅ Check permissions for Admin + Manager
+        const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+        if (!permissionCheck.hasPermission) {
             return res.status(403).json({
-                message: 'Unauthorized',
+                message: 'Insufficient permissions to view payment history',
                 success: false
             });
         }

@@ -65,9 +65,9 @@ const LeftSidebar = () => {
   const sidebarItems = [
     { icon: <Home />, text: "Home" },
     { icon: <Search />, text: "Search" },
-    { icon: <TrendingUp />, text: "Explore" },
+    // { icon: <TrendingUp />, text: "Explore" },
     { icon: <MessageCircle />, text: "Messages" },
-    { icon: <Heart />, text: "Notifications" },
+    // { icon: <Heart />, text: "Notifications" },
     { icon: <PlusSquare />, text: "Create" },
     {
       icon: (
@@ -91,7 +91,8 @@ const LeftSidebar = () => {
           </div>
           <div>
             {sidebarItems.map((item, index) => {
-              const showNotifBadge = item.text === "Notifications" && likeNotification.length > 0;
+              const showNotifBadge =
+                item.text === "Notifications" && likeNotification.length > 0;
               const showMsgBadge = item.text === "Messages" && unreadCount > 0;
               return (
                 <div
@@ -115,52 +116,59 @@ const LeftSidebar = () => {
                     )}
                   </div>
                   <span className="hidden lg:inline">{item.text}</span>
-                  {item.text === "Notifications" && likeNotification.length > 0 && (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          size="icon"
-                          className="rounded-full h-5 w-5 bg-red-600 hover:bg-red-600 absolute bottom-6 left-6"
-                        >
-                          {likeNotification.length}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent>
-                        <div>
-                          {likeNotification.length === 0 ? (
-                            <p>No new notification</p>
-                          ) : (
-                            likeNotification.map((notification) => {
-                              const key = `${notification.type}-${notification.userId}-${notification.postId || ''}`;
-                              const isComment = notification.type === 'comment';
-                              const text = isComment ? 'commented on your post' : 'liked your post';
-                              return (
-                                <div
-                                  key={key}
-                                  className="flex items-center gap-2 my-2"
-                                >
-                                  <Avatar>
-                                    <AvatarImage
-                                      src={
-                                        notification.userDetails?.profilePicture
-                                      }
-                                    />
-                                    <AvatarFallback>CN</AvatarFallback>
-                                  </Avatar>
-                                  <p className="text-sm">
-                                    <span className="font-bold">
-                                      {notification.userDetails?.username}
-                                    </span>{" "}
-                                    {text}
-                                  </p>
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
+                  {item.text === "Notifications" &&
+                    likeNotification.length > 0 && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            size="icon"
+                            className="rounded-full h-5 w-5 bg-red-600 hover:bg-red-600 absolute bottom-6 left-6"
+                          >
+                            {likeNotification.length}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent>
+                          <div>
+                            {likeNotification.length === 0 ? (
+                              <p>No new notification</p>
+                            ) : (
+                              likeNotification.map((notification) => {
+                                const key = `${notification.type}-${
+                                  notification.userId
+                                }-${notification.postId || ""}`;
+                                const isComment =
+                                  notification.type === "comment";
+                                const text = isComment
+                                  ? "commented on your post"
+                                  : "liked your post";
+                                return (
+                                  <div
+                                    key={key}
+                                    className="flex items-center gap-2 my-2"
+                                  >
+                                    <Avatar>
+                                      <AvatarImage
+                                        src={
+                                          notification.userDetails
+                                            ?.profilePicture
+                                        }
+                                      />
+                                      <AvatarFallback>CN</AvatarFallback>
+                                    </Avatar>
+                                    <p className="text-sm">
+                                      <span className="font-bold">
+                                        {notification.userDetails?.username}
+                                      </span>{" "}
+                                      {text}
+                                    </p>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    )}
                 </div>
               );
             })}
@@ -173,8 +181,8 @@ const LeftSidebar = () => {
       {/* Mobile bottom nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-20 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-neutral-950">
         <div className="flex justify-between px-6 py-3">
-          {["Home","Search","Create","Messages","Profile"].map((label) => {
-            const item = sidebarItems.find(i => i.text === label);
+          {["Home", "Search", "Create", "Messages", "Profile"].map((label) => {
+            const item = sidebarItems.find((i) => i.text === label);
             if (!item) return null;
             const showMsgBadge = label === "Messages" && unreadCount > 0;
             return (
@@ -193,7 +201,7 @@ const LeftSidebar = () => {
                 </div>
                 <span className="text-[10px] mt-1">{label}</span>
               </button>
-            )
+            );
           })}
           <ThemeToggle />
         </div>

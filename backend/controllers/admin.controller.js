@@ -24,7 +24,7 @@ export const createDefaultAdmin = async (req, res) => {
       fullName: "System Administrator",
       email: "admin@socialmedia.com",
       password: "Admin@123", // This will be hashed by the pre-save middleware
-      role: "super-admin",
+      role: "Manager",
       permissions: [
         "user-management",
         "post-management",
@@ -143,10 +143,13 @@ export const adminLogin = async (req, res) => {
 
 export const adminLogout = async (req, res) => {
   try {
-    return res.cookie("adminToken", "", { maxAge: 0 }).json({
-      message: "Logged out successfully.",
-      success: true,
-    });
+    return res
+      .cookie("adminToken", "", { maxAge: 0 })
+      .cookie("token", "", { maxAge: 0 })
+      .json({
+        message: "Logged out successfully.",
+        success: true,
+      });
   } catch (error) {
     console.log(error);
     return res.status(500).json({

@@ -6,10 +6,10 @@ import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import axios from 'axios';
 import { config } from '../config/config';
-import { Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { setAuthUser } from '@/redux/authSlice';
+import Loader from './ui/loader';
 
 const EditProfile = () => {
     const imageRef = useRef();
@@ -118,16 +118,20 @@ const EditProfile = () => {
                     </Select>
                 </div>
                 <div className='flex justify-end'>
-                    {
-                        loading ? (
-                            <Button className='w-fit bg-[#0095F6] hover:bg-[#2a8ccd]'>
-                                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    <Button 
+                        onClick={editProfileHandler} 
+                        className='w-fit bg-[#0095F6] hover:bg-[#2a8ccd] flex items-center gap-2'
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <>
+                                <Loader size="sm" color="white" />
                                 Please wait
-                            </Button>
+                            </>
                         ) : (
-                            <Button onClick={editProfileHandler} className='w-fit bg-[#0095F6] hover:bg-[#2a8ccd]'>Submit</Button>
-                        )
-                    }
+                            'Submit'
+                        )}
+                    </Button>
                 </div>
             </section>
         </div>

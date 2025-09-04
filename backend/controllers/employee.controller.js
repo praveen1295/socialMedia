@@ -3,10 +3,36 @@ import { Admin } from "../models/admin.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+// ✅ Utility: Check if user has required role
+const hasPermission = async (userId, allowedRoles = ["admin", "Manager"]) => {
+  // Check in Admin model
+  const admin = await Admin.findById(userId);
+  if (admin && admin.isActive && allowedRoles.includes(admin.role)) {
+    return { hasPermission: true, role: admin.role, user: admin };
+  }
+
+  // Check in Employee model
+  const employee = await Employee.findById(userId);
+  if (employee && employee.isActive && allowedRoles.includes(employee.role)) {
+    return { hasPermission: true, role: employee.role, user: employee };
+  }
+
+  return { hasPermission: false, role: null, user: null };
+};
+
 export const createEmployee = async (req, res) => {
   try {
     let { fullName, email, mobileNo, role, password } = req.body;
     const adminId = req.id; // From authentication middleware
+
+    // ✅ Check permissions for Admin + Manager
+    const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+    if (!permissionCheck.hasPermission) {
+      return res.status(403).json({
+        message: "Insufficient permissions to create employees",
+        success: false,
+      });
+    }
 
     // Basic input validation and normalization
     fullName = typeof fullName === "string" ? fullName.trim() : "";
@@ -37,15 +63,6 @@ export const createEmployee = async (req, res) => {
         existingEmployee.email === email ? "email" : "mobile number";
       return res.status(400).json({
         message: `Employee with this ${field} already exists`,
-        success: false,
-      });
-    }
-
-    // Verify admin exists and has permission
-    const admin = await Admin.findById(adminId);
-    if (!admin || !admin.isActive) {
-      return res.status(403).json({
-        message: "Unauthorized to create employees",
         success: false,
       });
     }
@@ -90,11 +107,11 @@ export const getEmployees = async (req, res) => {
     const { role, isActive, page = 1, limit = 10 } = req.query;
     const adminId = req.id;
 
-    // Verify admin exists
-    const admin = await Admin.findById(adminId);
-    if (!admin || !admin.isActive) {
+    // ✅ Check permissions for Admin + Manager
+    const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+    if (!permissionCheck.hasPermission) {
       return res.status(403).json({
-        message: "Unauthorized",
+        message: "Insufficient permissions to view employees",
         success: false,
       });
     }
@@ -141,11 +158,11 @@ export const getEmployeeById = async (req, res) => {
     const employeeId = req.params.id;
     const adminId = req.id;
 
-    // Verify admin exists
-    const admin = await Admin.findById(adminId);
-    if (!admin || !admin.isActive) {
+    // ✅ Check permissions for Admin + Manager
+    const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+    if (!permissionCheck.hasPermission) {
       return res.status(403).json({
-        message: "Unauthorized",
+        message: "Insufficient permissions to view employee details",
         success: false,
       });
     }
@@ -180,11 +197,11 @@ export const updateEmployee = async (req, res) => {
     const adminId = req.id;
     const { fullName, email, mobileNo, role, isActive } = req.body;
 
-    // Verify admin exists
-    const admin = await Admin.findById(adminId);
-    if (!admin || !admin.isActive) {
+    // ✅ Check permissions for Admin + Manager
+    const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+    if (!permissionCheck.hasPermission) {
       return res.status(403).json({
-        message: "Unauthorized",
+        message: "Insufficient permissions to update employees",
         success: false,
       });
     }
@@ -257,11 +274,11 @@ export const deleteEmployee = async (req, res) => {
     const employeeId = req.params.id;
     const adminId = req.id;
 
-    // Verify admin exists
-    const admin = await Admin.findById(adminId);
-    if (!admin || !admin.isActive) {
+    // ✅ Check permissions for Admin + Manager
+    const permissionCheck = await hasPermission(adminId, ["admin", "Manager"]);
+    if (!permissionCheck.hasPermission) {
       return res.status(403).json({
-        message: "Unauthorized",
+        message: "Insufficient permissions to delete employees",
         success: false,
       });
     }
@@ -274,12 +291,19 @@ export const deleteEmployee = async (req, res) => {
       });
     }
 
-    // Soft delete by setting isActive to false
-    employee.isActive = false;
-    await employee.save();
+    // Check if trying to delete self
+    if (employeeId === adminId) {
+      return res.status(400).json({
+        message: "You cannot delete your own account",
+        success: false,
+      });
+    }
+
+    // Actually delete the employee from database
+    await Employee.findByIdAndDelete(employeeId);
 
     return res.status(200).json({
-      message: "Employee deactivated successfully",
+      message: "Employee deleted successfully",
       success: true,
     });
   } catch (error) {
@@ -293,8 +317,8 @@ export const deleteEmployee = async (req, res) => {
 
 export const employeeLogin = async (req, res) => {
   try {
-    const { email, password } = req.body;
-
+    const { emailOrUsername: email, password } = req.body;
+    console.log("==================>>>>>>>>>>>", email, password);
     if (!email || !password) {
       return res.status(400).json({
         message: "Email and password are required",
